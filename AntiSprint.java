@@ -13,7 +13,7 @@ public class AntiSprint extends Module {
     public static AntiSprint INSTANCE;
 
     public AntiSprint() {
-        super("Sprint", Category.MOVEMENT, "But why? Why would you use this?");
+        super("AntiSprint", Category.MOVEMENT, "But why? Why would you use this?");
 
         INSTANCE = this;
     }
