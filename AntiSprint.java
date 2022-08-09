@@ -18,8 +18,14 @@ public class AntiSprint extends Module {
         INSTANCE = this;
     }
 
+    //if anyone ever says this module is bloat they are wrong
     @Override
     public void onTick() {
+        if (nullCheck()) {
+            return;
+        }
+
+        {
         mc.player.setSprinting(false);
-    }
-}
+        }
+}}
