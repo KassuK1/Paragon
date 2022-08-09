@@ -1,5 +1,4 @@
 package com.paragon.client.systems.module.impl.movement;
-
 import com.paragon.api.module.Category;
 import com.paragon.api.module.Module;
 
