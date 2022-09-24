@@ -1,7 +1,7 @@
 package com.paragon.mixins.world.block;
 
 import com.paragon.Paragon;
-import com.paragon.api.event.world.LiquidInteractEvent;
+import com.paragon.impl.event.world.LiquidInteractEvent;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinBlockLiquid {
 
     @Inject(method = "canCollideCheck", at = @At("HEAD"), cancellable = true)
-    public void onCanCollideCheck(IBlockState state, boolean hitIfLiquid, CallbackInfoReturnable<Boolean> cir) {
+    public void hookCanCollideCheck(IBlockState state, boolean hitIfLiquid, CallbackInfoReturnable<Boolean> cir) {
         LiquidInteractEvent liquidInteractEvent = new LiquidInteractEvent();
         Paragon.INSTANCE.getEventBus().post(liquidInteractEvent);
 

@@ -1,8 +1,8 @@
 package com.paragon.mixins.render.entity;
 
 import com.paragon.Paragon;
-import com.paragon.api.event.render.entity.EntityHighlightOnHitEvent;
-import com.paragon.api.event.render.entity.RenderEntityEvent;
+import com.paragon.impl.event.render.entity.EntityHighlightOnHitEvent;
+import com.paragon.impl.event.render.entity.RenderEntityEvent;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -42,7 +42,7 @@ public abstract class MixinRenderLivingBase<T extends EntityLivingBase> extends 
     }
 
     @Inject(method = "renderModel", at = @At("TAIL"), cancellable = true)
-    public void renderModel(T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, CallbackInfo ci) {
+    public void hookRenderModel(T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, CallbackInfo ci) {
         RenderEntityEvent renderEntityEvent = new RenderEntityEvent(mainModel, entitylivingbaseIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scaleFactor);
         Paragon.INSTANCE.getEventBus().post(renderEntityEvent);
 
@@ -55,7 +55,7 @@ public abstract class MixinRenderLivingBase<T extends EntityLivingBase> extends 
      * Couldn't figure out how to inject into the if statement, so here we are.
      */
     @Inject(method = "setBrightness", at = @At("HEAD"), cancellable = true)
-    public void onSetBrightness(T entitylivingbaseIn, float partialTicks, boolean combineTextures, CallbackInfoReturnable<Boolean> cir) {
+    public void hookSetBrightness(T entitylivingbaseIn, float partialTicks, boolean combineTextures, CallbackInfoReturnable<Boolean> cir) {
         EntityHighlightOnHitEvent event = new EntityHighlightOnHitEvent();
         Paragon.INSTANCE.getEventBus().post(event);
 
@@ -66,9 +66,10 @@ public abstract class MixinRenderLivingBase<T extends EntityLivingBase> extends 
             int i = getColorMultiplier(entitylivingbaseIn, f, partialTicks);
             boolean flag = (i >> 24 & 255) > 0;
             boolean flag1 = entitylivingbaseIn.hurtTime > 0 || entitylivingbaseIn.deathTime > 0;
-            if (!flag && !flag1) {
+
+            if (! flag && ! flag1) {
                 cir.setReturnValue(false);
-            } else if (!flag && !combineTextures) {
+            } else if (! flag && ! combineTextures) {
                 cir.setReturnValue(false);
             } else {
                 GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
@@ -103,10 +104,10 @@ public abstract class MixinRenderLivingBase<T extends EntityLivingBase> extends 
                     this.brightnessBuffer.put(event.getColour().getBlue() / 255f);
                     this.brightnessBuffer.put(event.getColour().getAlpha() / 255f);
                 } else {
-                    float f1 = (float)(i >> 24 & 255) / 255.0F;
-                    float f2 = (float)(i >> 16 & 255) / 255.0F;
-                    float f3 = (float)(i >> 8 & 255) / 255.0F;
-                    float f4 = (float)(i & 255) / 255.0F;
+                    float f1 = (float) (i >> 24 & 255) / 255.0F;
+                    float f2 = (float) (i >> 16 & 255) / 255.0F;
+                    float f3 = (float) (i >> 8 & 255) / 255.0F;
+                    float f4 = (float) (i & 255) / 255.0F;
                     this.brightnessBuffer.put(f2);
                     this.brightnessBuffer.put(f3);
                     this.brightnessBuffer.put(f4);

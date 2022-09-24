@@ -1,7 +1,7 @@
 package com.paragon.mixins;
 
 import com.paragon.Paragon;
-import com.paragon.client.ui.menu.ParagonMenu;
+import com.paragon.impl.ui.menu.ParagonMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
@@ -28,7 +28,7 @@ public class MixinMinecraft {
     public GuiScreen currentScreen;
 
     @Inject(method = "displayGuiScreen", at = @At("HEAD"), cancellable = true)
-    public void onDisplayGuiScreen(GuiScreen guiScreenIn, CallbackInfo ci) {
+    public void hookDisplayGuiScreen(GuiScreen guiScreenIn, CallbackInfo ci) {
         if (guiScreenIn instanceof GuiMainMenu && Paragon.INSTANCE.isParagonMainMenu()) {
             Minecraft.getMinecraft().displayGuiScreen(new ParagonMenu());
             ci.cancel();

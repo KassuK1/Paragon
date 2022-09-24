@@ -1,8 +1,8 @@
 package com.paragon.mixins.render.gui;
 
 import com.paragon.Paragon;
-import com.paragon.api.event.render.gui.TabListEvent;
-import com.paragon.api.event.render.gui.TabOverlayEvent;
+import com.paragon.impl.event.render.gui.TabListEvent;
+import com.paragon.impl.event.render.gui.TabOverlayEvent;
 import net.minecraft.client.gui.GuiPlayerTabOverlay;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.scoreboard.ScorePlayerTeam;
@@ -19,7 +19,7 @@ import java.util.List;
 public class MixinGuiPlayerTabOverlay {
 
     @Redirect(method = "renderPlayerlist", at = @At(value = "INVOKE", target = "Ljava/util/List;subList(II)Ljava/util/List;", remap = false))
-    public List<NetworkPlayerInfo> onRenderPlayerList(List<NetworkPlayerInfo> list, int i, int j) {
+    public List<NetworkPlayerInfo> hookRenderPlayerList(List<NetworkPlayerInfo> list, int i, int j) {
         TabListEvent event = new TabListEvent(list.size());
         Paragon.INSTANCE.getEventBus().post(event);
 
@@ -31,7 +31,7 @@ public class MixinGuiPlayerTabOverlay {
     }
 
     @Inject(method = "getPlayerName", at = @At("HEAD"), cancellable = true)
-    public void onGetPlayerName(NetworkPlayerInfo networkPlayerInfoIn, CallbackInfoReturnable<String> cir) {
+    public void hookGetPlayerName(NetworkPlayerInfo networkPlayerInfoIn, CallbackInfoReturnable<String> cir) {
         TabOverlayEvent event = new TabOverlayEvent();
         Paragon.INSTANCE.getEventBus().post(event);
 

@@ -1,7 +1,7 @@
 package com.paragon.mixins.render.tileentity;
 
 import com.paragon.Paragon;
-import com.paragon.api.event.render.tileentity.RenderTileEntityEvent;
+import com.paragon.impl.event.render.tileentity.RenderTileEntityEvent;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.tileentity.TileEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +26,7 @@ public class MixinTileEntityRendererDispatcher {
     public static double staticPlayerZ;
 
     @Inject(method = "render(Lnet/minecraft/tileentity/TileEntity;FI)V", at = @At("HEAD"))
-    public void onRenderTileEntity(TileEntity tileEntity, float partialTicks, int destroyStage, CallbackInfo ci) {
+    public void hookRender(TileEntity tileEntity, float partialTicks, int destroyStage, CallbackInfo ci) {
         RenderTileEntityEvent renderTileEntityEvent = new RenderTileEntityEvent(this.instance, tileEntity, partialTicks, staticPlayerX, staticPlayerY, staticPlayerZ);
         Paragon.INSTANCE.getEventBus().post(renderTileEntityEvent);
     }

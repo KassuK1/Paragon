@@ -1,8 +1,8 @@
 package com.paragon.mixins.world.block;
 
 import com.paragon.Paragon;
-import com.paragon.api.event.render.world.FullCubeBlockEvent;
-import com.paragon.api.event.render.world.SideRenderBlockEvent;
+import com.paragon.impl.event.render.world.FullCubeBlockEvent;
+import com.paragon.impl.event.render.world.SideRenderBlockEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinBlock {
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
-    public void onShouldSideBeRendered(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side, CallbackInfoReturnable<Boolean> cir) {
+    public void hookShouldSideBeRendered(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side, CallbackInfoReturnable<Boolean> cir) {
         SideRenderBlockEvent sideRenderBlockEvent = new SideRenderBlockEvent(pos);
         Paragon.INSTANCE.getEventBus().post(sideRenderBlockEvent);
 
@@ -32,7 +32,7 @@ public class MixinBlock {
     }
 
     @Inject(method = "isFullCube", at = @At("HEAD"), cancellable = true)
-    public void onIsFullCube(IBlockState state, CallbackInfoReturnable<Boolean> cir) {
+    public void hookIsFullCube(IBlockState state, CallbackInfoReturnable<Boolean> cir) {
         FullCubeBlockEvent fullCubeBlockEvent = new FullCubeBlockEvent(state.getBlock());
         Paragon.INSTANCE.getEventBus().post(fullCubeBlockEvent);
 

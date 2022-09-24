@@ -14,26 +14,12 @@ class MixinLoader : IFMLLoadingPlugin {
         Mixins.addConfiguration("mixins.paragon.json")
         MixinEnvironment.getDefaultEnvironment().obfuscationContext = "searge"
 
-        Paragon.INSTANCE.logger.info("Mixins loaded with context '${MixinEnvironment.getDefaultEnvironment().obfuscationContext}'")
+        com.paragon.Paragon.Companion.INSTANCE.logger.info("Mixins loaded with context '${MixinEnvironment.getDefaultEnvironment().obfuscationContext}'")
     }
 
-    override fun getASMTransformerClass(): Array<String> {
-        return emptyArray()
-    }
-
-    override fun getModContainerClass(): String? {
-        return null
-    }
-
-    override fun getSetupClass(): String? {
-        return null
-    }
-
-    override fun injectData(data: Map<String, Any>) {
-
-    }
-
-    override fun getAccessTransformerClass(): String? {
-        return null
-    }
+    override fun getASMTransformerClass(): Array<String> = emptyArray()
+    override fun getModContainerClass(): String? = null
+    override fun getSetupClass(): String? = null
+    override fun injectData(data: Map<String, Any>) = Unit
+    override fun getAccessTransformerClass(): String? = null
 }

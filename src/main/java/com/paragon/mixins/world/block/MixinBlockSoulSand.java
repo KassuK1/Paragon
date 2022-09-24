@@ -1,8 +1,8 @@
 package com.paragon.mixins.world.block;
 
 import com.paragon.Paragon;
-import com.paragon.api.event.world.PlayerCollideWithBlockEvent;
-import com.paragon.api.util.world.BlockUtil;
+import com.paragon.impl.event.world.PlayerCollideWithBlockEvent;
+import com.paragon.util.world.BlockUtil;
 import net.minecraft.block.BlockSoulSand;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinBlockSoulSand {
 
     @Inject(method = "onEntityCollidedWithBlock", at = @At("HEAD"), cancellable = true)
-    public void onEntityCollide(World worldIn, BlockPos pos, IBlockState state, Entity entityIn, CallbackInfo ci) {
+    public void hookOnEntityCollidedWithBlock(World worldIn, BlockPos pos, IBlockState state, Entity entityIn, CallbackInfo ci) {
         try {
             if (entityIn.getEntityId() == Minecraft.getMinecraft().player.getEntityId()) {
                 PlayerCollideWithBlockEvent blockSlowEvent = new PlayerCollideWithBlockEvent(pos, BlockUtil.getBlockAtPos(pos));
