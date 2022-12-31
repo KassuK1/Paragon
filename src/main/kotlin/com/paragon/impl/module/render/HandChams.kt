@@ -5,6 +5,7 @@ import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
+import com.paragon.util.mc
 import net.minecraft.client.model.ModelPlayer
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.OpenGlHelper
@@ -48,7 +49,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
 
     @Listener
     fun onRenderLeftPre(event: RenderArmEvent.LeftArmPre) {
-        if (event.player == minecraft.player) {
+        if (event.player == mc.player) {
             // Enable transparency
             if (transparent.value) {
                 GlStateManager.enableBlendProfile(GlStateManager.Profile.TRANSPARENT_MODEL)
@@ -82,7 +83,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
 
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f)
 
-            glColor4f(colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.alpha / 255f)
+            glColor4f(colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.value.alpha / 255f)
 
             // Change polygon rendering mode
             when (mode.value) {
@@ -92,7 +93,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
 
             if (mode.value == Mode.WIRE_MODEL) {
                 glColor4f(
-                    colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.alpha / 255f
+                    colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.value.alpha / 255f
                 )
 
                 glLineWidth(width.value)
@@ -104,7 +105,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
 
     @Listener
     fun onRenderLeftPost(event: RenderArmEvent.LeftArmPost) {
-        if (event.player == minecraft.player) {
+        if (event.player == mc.player) {
             // Enable lighting
             if (lighting.value) {
                 glEnable(GL_LIGHTING)
@@ -131,7 +132,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
 
     @Listener
     fun onRenderRightPre(event: RenderArmEvent.RightArmPre) {
-        if (event.player == minecraft.player) {
+        if (event.player == mc.player) {
             // Enable transparency
             if (transparent.value) {
                 GlStateManager.enableBlendProfile(GlStateManager.Profile.TRANSPARENT_MODEL)
@@ -165,7 +166,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
 
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f)
 
-            glColor4f(colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.alpha / 255f)
+            glColor4f(colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.value.alpha / 255f)
 
             // Change polygon rendering mode
             when (mode.value) {
@@ -175,7 +176,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
 
             if (mode.value == Mode.WIRE_MODEL) {
                 glColor4f(
-                    colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.alpha / 255f
+                    colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.value.alpha / 255f
                 )
 
                 renderRightArm(event.player, event.useSmallArms)
@@ -188,7 +189,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
 
     @Listener
     fun onRenderRightPost(event: RenderArmEvent.RightArmPost) {
-        if (event.player == minecraft.player) {
+        if (event.player == mc.player) {
             // Enable lighting
             if (lighting.value) {
                 glEnable(GL_LIGHTING)
@@ -214,7 +215,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
     }
 
     private fun renderRightArm(clientPlayer: EntityPlayer?, useSmallArms: Boolean) {
-        glColor4f(colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.alpha / 255f)
+        glColor4f(colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.value.alpha / 255f)
 
         val modelPlayer = ModelPlayer(0.0f, useSmallArms)
 
@@ -238,7 +239,7 @@ object HandChams : Module("HandChams", Category.RENDER, "Changes the hand colour
     }
 
     private fun renderLeftArm(clientPlayer: EntityPlayer?, useSmallArms: Boolean) {
-        glColor4f(colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.alpha / 255f)
+        glColor4f(colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.value.alpha / 255f)
 
         val modelPlayer = ModelPlayer(0.0f, useSmallArms)
 

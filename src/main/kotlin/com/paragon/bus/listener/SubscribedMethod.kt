@@ -20,38 +20,41 @@ class SubscribedMethod(val source: Any?, method: Method) {
     private var handler: Consumer<Any>? = null
 
     init {
-        if (handlerCache.containsKey(method)) handler = handlerCache[method]
-        else try {
-            // Get lookup instance
-            val lookup = MethodHandles.lookup()
+        if (handlerCache.containsKey(method)) {
+            handler = handlerCache[method]
+        } else {
+            try {
+                // Get lookup instance
+                val lookup = MethodHandles.lookup()
 
-            // Check method modifiers for static
-            val isStatic = Modifier.isStatic(method.modifiers)
+                // Check method modifiers for static
+                val isStatic = Modifier.isStatic(method.modifiers)
 
-            // Create methodType for invoking the methodHandle
-            val targetSignature = MethodType.methodType(Consumer::class.java)
+                // Create methodType for invoking the methodHandle
+                val targetSignature = MethodType.methodType(Consumer::class.java)
 
-            // Generate callsite
-            val callSite = LambdaMetafactory.metafactory(
-                lookup,  // The lookup instance to use
-                "accept",  // The name of the method to implement
-                if (isStatic) targetSignature else targetSignature.appendParameterTypes(source?.javaClass),  // The signature for .invoke()
-                MethodType.methodType(Void.TYPE, Any::class.java),  // The method signature to implement
-                lookup.unreflect(method),  // Method to invoke when called
-                MethodType.methodType(Void.TYPE, method.parameterTypes[0]) // Signature that is enforced at runtime
-            )
+                // Generate callsite
+                val callSite = LambdaMetafactory.metafactory(
+                    lookup,  // The lookup instance to use
+                    "accept",  // The name of the method to implement
+                    if (isStatic) targetSignature else targetSignature.appendParameterTypes(source?.javaClass),  // The signature for .invoke()
+                    MethodType.methodType(Void.TYPE, Any::class.java),  // The method signature to implement
+                    lookup.unreflect(method),  // Method to invoke when called
+                    MethodType.methodType(Void.TYPE, method.parameterTypes[0]) // Signature that is enforced at runtime
+                )
 
-            // Get target to invoke
-            val target = callSite.target
+                // Get target to invoke
+                val target = callSite.target
 
-            // Invoke on the object if not static
-            handler = (if (isStatic) target.invoke() else target.invoke(source)) as Consumer<Any>
+                // Invoke on the object if not static
+                handler = (if (isStatic) target.invoke() else target.invoke(source)) as Consumer<Any>
 
-            // Cache this dynamic handler
-            handlerCache[method] = handler
-        } catch (throwable: Throwable) {
-            // This shouldn't ever happen
-            throw Error(throwable)
+                // Cache this dynamic handler
+                handlerCache[method] = handler
+            } catch (throwable: Throwable) {
+                // This shouldn't ever happen
+                throw Error(throwable)
+            }
         }
     }
 

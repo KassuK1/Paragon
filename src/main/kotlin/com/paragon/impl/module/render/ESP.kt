@@ -1,18 +1,21 @@
 package com.paragon.impl.module.render
 
+import com.paragon.bus.listener.Listener
 import com.paragon.impl.event.client.SettingUpdateEvent
 import com.paragon.impl.event.render.ShaderColourEvent
 import com.paragon.impl.event.render.entity.RenderEntityEvent
+import com.paragon.impl.module.Category
 import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
-import com.paragon.util.render.ColourUtil.integrateAlpha
-import com.paragon.bus.listener.Listener
-import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IEntityRenderer
 import com.paragon.mixins.accessor.IRenderGlobal
 import com.paragon.mixins.accessor.IShaderGroup
 import com.paragon.util.anyNull
 import com.paragon.util.entity.EntityUtil
+import com.paragon.util.entity.EntityUtil.isMonster
+import com.paragon.util.entity.EntityUtil.isPassive
+import com.paragon.util.mc
+import com.paragon.util.render.ColourUtil.integrateAlpha
 import com.paragon.util.render.OutlineUtil.renderFive
 import com.paragon.util.render.OutlineUtil.renderFour
 import com.paragon.util.render.OutlineUtil.renderOne
@@ -23,13 +26,10 @@ import com.paragon.util.render.builder.RenderBuilder
 import com.paragon.util.render.shader.shaders.OutlineShader
 import com.paragon.util.string.StringUtil
 import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.renderer.RenderHelper
 import net.minecraft.client.shader.Framebuffer
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLiving
 import net.minecraft.entity.item.EntityEnderCrystal
 import net.minecraft.entity.item.EntityItem
-import net.minecraft.entity.monster.EntityMob
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraftforge.client.event.RenderGameOverlayEvent
 import net.minecraftforge.client.event.RenderWorldLastEvent
@@ -47,51 +47,21 @@ import java.awt.Color
 object ESP : Module("ESP", Category.RENDER, "Highlights entities in the world") {
 
     // Entity filters
-    private val passive = Setting(
-        "Passives", true
-    ) describedBy "Highlight passive entities"
-
-    private val mobs = Setting(
-        "Mobs", true
-    ) describedBy "Highlight mobs"
-
-    private val players = Setting(
-        "Players", true
-    ) describedBy "Highlight player entities"
-
-    private val items = Setting(
-        "Items", true
-    ) describedBy "Highlight items"
-
-    private val crystals = Setting(
-        "Crystals", true
-    ) describedBy "Highlight crystals"
+    private val passive = Setting("Passives", true) describedBy "Highlight passive entities"
+    private val mobs = Setting("Mobs", true) describedBy "Highlight mobs"
+    private val players = Setting("Players", true) describedBy "Highlight player entities"
+    private val items = Setting("Items", true) describedBy "Highlight items"
+    private val crystals = Setting("Crystals", true) describedBy "Highlight crystals"
 
     // Render settings
-    private val mode = Setting(
-        "Mode", Mode.SHADER
-    ) describedBy "How to render the entities"
-
-    private val boxMode = Setting(
-        "Box", BoxRenderMode.BOTH
-    ) describedBy "How to render the box" subOf mode visibleWhen { mode.value == Mode.BOX }
-
-    private val lineWidth = Setting(
-        "LineWidth", 1f, 0.1f, 3f, 0.1f
-    ) describedBy "How thick to render the outlines" visibleWhen { mode.value == Mode.BOX && (boxMode.value == BoxRenderMode.OUTLINE || boxMode.value == BoxRenderMode.BOTH) || mode.value != Mode.BOX }
+    private val mode = Setting("Mode", Mode.SHADER) describedBy "How to render the entities"
+    private val boxMode = Setting("Box", BoxRenderMode.BOTH) describedBy "How to render the box" subOf mode visibleWhen { mode.value == Mode.BOX }
+    private val lineWidth = Setting("LineWidth", 1f, 0.1f, 3f, 0.1f) describedBy "How thick to render the outlines" visibleWhen { mode.value == Mode.BOX && (boxMode.value == BoxRenderMode.OUTLINE || boxMode.value == BoxRenderMode.BOTH) || mode.value != Mode.BOX }
 
     // Outline shader
-    private val outline = Setting(
-        "Outline", true
-    ) describedBy "Outline the fill" subOf mode visibleWhen { mode.value == Mode.SHADER }
-
-    private val fill = Setting(
-        "Fill", true
-    ) describedBy "Fill the outline" subOf mode visibleWhen { mode.value == Mode.SHADER }
-
-    private val colour = Setting(
-        "Colour", Color(185, 17, 255)
-    ) describedBy "The colour to highlight items in"
+    private val outline = Setting("Outline", true) describedBy "Outline the fill" subOf mode visibleWhen { mode.value == Mode.SHADER }
+    private val fill = Setting("Fill", true) describedBy "Fill the outline" subOf mode visibleWhen { mode.value == Mode.SHADER }
+    private val colour = Setting("Colour", Color(185, 17, 255)) describedBy "The colour to highlight items in"
 
     // Shaders
     private val outlineShader = OutlineShader()
@@ -101,11 +71,11 @@ object ESP : Module("ESP", Category.RENDER, "Highlights entities in the world") 
     private var lastScaleHeight = 0f
 
     override fun onDisable() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        for (e in minecraft.world.loadedEntityList) {
+        for (e in mc.world.loadedEntityList) {
             e.isGlowing = false
         }
     }
@@ -123,37 +93,36 @@ object ESP : Module("ESP", Category.RENDER, "Highlights entities in the world") 
             // Delete old framebuffer
             if (frameBuffer != null) {
                 frameBuffer!!.framebufferClear()
+
                 if (lastScaleFactor != event.resolution.scaleFactor.toFloat() || lastScaleWidth != event.resolution.scaledWidth.toFloat() || lastScaleHeight != event.resolution.scaledHeight.toFloat()) {
                     frameBuffer!!.deleteFramebuffer()
-                    frameBuffer = Framebuffer(minecraft.displayWidth, minecraft.displayHeight, true)
+                    frameBuffer = Framebuffer(mc.displayWidth, mc.displayHeight, true)
                     frameBuffer!!.framebufferClear()
                 }
+
                 lastScaleFactor = event.resolution.scaleFactor.toFloat()
                 lastScaleWidth = event.resolution.scaledWidth.toFloat()
                 lastScaleHeight = event.resolution.scaledHeight.toFloat()
-            }
-            else {
-                frameBuffer = Framebuffer(minecraft.displayWidth, minecraft.displayHeight, true)
+            } else {
+                frameBuffer = Framebuffer(mc.displayWidth, mc.displayHeight, true)
             }
 
             frameBuffer!!.bindFramebuffer(false)
-            val previousShadows = minecraft.gameSettings.entityShadows
-            minecraft.gameSettings.entityShadows = false
-            (minecraft.entityRenderer as IEntityRenderer).hookSetupCameraTransform(event.partialTicks, 0)
+            val previousShadows = mc.gameSettings.entityShadows
+            mc.gameSettings.entityShadows = false
+            (mc.entityRenderer as IEntityRenderer).hookSetupCameraTransform(event.partialTicks, 0)
 
-            for (entity in minecraft.world.loadedEntityList) {
-                if (entity != null && entity !== minecraft.player && isEntityValid(entity)) {
-                    minecraft.renderManager.renderEntityStatic(entity, event.partialTicks, false)
+            for (entity in mc.world.loadedEntityList) {
+                if (entity != null && entity !== mc.player && isEntityValid(entity)) {
+                    mc.renderManager.renderEntityStatic(entity, event.partialTicks, false)
                 }
             }
 
-            minecraft.gameSettings.entityShadows = previousShadows
+            mc.gameSettings.entityShadows = previousShadows
             GlStateManager.enableBlend()
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
             frameBuffer!!.unbindFramebuffer()
-            minecraft.framebuffer.bindFramebuffer(true)
-            minecraft.entityRenderer.disableLightmap()
-            RenderHelper.disableStandardItemLighting()
+            mc.framebuffer.bindFramebuffer(false)
             GlStateManager.pushMatrix()
 
             // Render shader
@@ -163,7 +132,7 @@ object ESP : Module("ESP", Category.RENDER, "Highlights entities in the world") 
             outlineShader.setOutline(if (outline.value) 1 else 0)
             outlineShader.startShader()
 
-            minecraft.entityRenderer.setupOverlayRendering()
+            mc.entityRenderer.setupOverlayRendering()
 
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, frameBuffer!!.framebufferTexture)
             GL11.glBegin(GL11.GL_QUADS)
@@ -180,16 +149,16 @@ object ESP : Module("ESP", Category.RENDER, "Highlights entities in the world") 
             // Stop drawing shader
             GL20.glUseProgram(0)
             GL11.glPopMatrix()
-            minecraft.entityRenderer.enableLightmap()
             GlStateManager.popMatrix()
             GlStateManager.popAttrib()
-            minecraft.entityRenderer.setupOverlayRendering()
+
+            mc.entityRenderer.setupOverlayRendering()
         }
     }
 
     @Listener
     fun onRenderEntity(event: RenderEntityEvent) {
-        if (isEntityValid(event.entity) && mode.value == Mode.OUTLINE) {
+        if (mode.value == Mode.OUTLINE && isEntityValid(event.entity)) {
             renderOne(lineWidth.value)
             event.renderModel()
             renderTwo()
@@ -205,20 +174,24 @@ object ESP : Module("ESP", Category.RENDER, "Highlights entities in the world") 
 
     @SubscribeEvent
     fun onRenderWorld(event: RenderWorldLastEvent?) {
-        for (e in minecraft.world.loadedEntityList) {
-            if (isEntityValid(e)) {
-                espEntity(e)
+        if (mode.value != Mode.SHADER) {
+            for (e in mc.world.loadedEntityList) {
+                if (isEntityValid(e)) {
+                    espEntity(e)
+                }
             }
-        }
 
-        // Check glow
-        if (mode.value == Mode.GLOW) {
-            // Get shaders
-            val shaders = ((minecraft.renderGlobal as IRenderGlobal).hookGetEntityOutlineShader() as IShaderGroup).hookGetListShaders()
-            shaders.forEach {
-                // Get line width
-                val uniform = (it ?: return@forEach).shaderManager.getShaderUniform("Radius")
-                uniform?.set(lineWidth.value)
+            // Check glow
+            if (mode.value == Mode.GLOW) {
+                // Get shaders
+                val shaders =
+                    ((mc.renderGlobal as IRenderGlobal).hookGetEntityOutlineShader() as IShaderGroup).hookGetListShaders()
+
+                shaders.forEach {
+                    // Get line width
+                    val uniform = (it ?: return@forEach).shaderManager.getShaderUniform("Radius")
+                    uniform?.set(lineWidth.value)
+                }
             }
         }
     }
@@ -234,7 +207,7 @@ object ESP : Module("ESP", Category.RENDER, "Highlights entities in the world") 
     @Listener
     fun onSettingUpdate(event: SettingUpdateEvent) {
         if (event.setting == mode) {
-            for (entity in minecraft.world.loadedEntityList) {
+            for (entity in mc.world.loadedEntityList) {
                 entity.isGlowing = false
             }
         }
@@ -247,16 +220,21 @@ object ESP : Module("ESP", Category.RENDER, "Highlights entities in the world") 
      */
     private fun espEntity(entityIn: Entity) {
         if (mode.value == Mode.BOX) {
-            RenderBuilder().boundingBox(EntityUtil.getEntityBox(entityIn)).inner(colour.value).outer(colour.value.integrateAlpha(255f)).type(boxMode.value)
-
+            RenderBuilder()
+                .boundingBox(
+                    EntityUtil.getEntityBox(entityIn)
+                )
+                .inner(colour.value)
+                .outer(colour.value.integrateAlpha(255f))
+                .type(boxMode.value)
                 .start()
-
-                .blend(true).depth(true).texture(true).lineWidth(lineWidth.value)
-
+                .blend(true)
+                .depth(true)
+                .texture(true)
+                .lineWidth(lineWidth.value)
                 .build(false)
 
-        }
-        else if (mode.value == Mode.GLOW) {
+        } else if (mode.value == Mode.GLOW) {
             entityIn.isGlowing = true
         }
     }
@@ -268,7 +246,11 @@ object ESP : Module("ESP", Category.RENDER, "Highlights entities in the world") 
      * @return Is the entity valid
      */
     private fun isEntityValid(entityIn: Entity): Boolean {
-        return entityIn is EntityPlayer && entityIn !== minecraft.player && players.value || entityIn is EntityLiving && entityIn !is EntityMob && passive.value || entityIn is EntityMob && mobs.value || entityIn is EntityEnderCrystal && crystals.value || entityIn is EntityItem && items.value
+        return  entityIn is EntityPlayer && entityIn !== mc.player && players.value ||
+                entityIn.isPassive() && passive.value ||
+                entityIn.isMonster() && mobs.value ||
+                entityIn is EntityEnderCrystal && crystals.value ||
+                entityIn is EntityItem && items.value
     }
 
     override fun getData(): String = StringUtil.getFormattedText(mode.value)

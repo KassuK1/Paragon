@@ -1,22 +1,24 @@
 package com.paragon.impl.module.combat
 
 import com.paragon.Paragon
-import com.paragon.impl.event.network.PacketEvent
-import com.paragon.impl.module.Module
-import com.paragon.impl.setting.Setting
-import com.paragon.util.render.ColourUtil.integrateAlpha
 import com.paragon.bus.listener.Listener
+import com.paragon.impl.event.network.PacketEvent
 import com.paragon.impl.managers.notifications.Notification
 import com.paragon.impl.managers.notifications.NotificationType
 import com.paragon.impl.managers.rotation.Rotate
 import com.paragon.impl.managers.rotation.Rotation
 import com.paragon.impl.managers.rotation.RotationPriority
 import com.paragon.impl.module.Category
+import com.paragon.impl.module.Module
+import com.paragon.impl.module.annotation.Aliases
+import com.paragon.impl.setting.Setting
 import com.paragon.mixins.accessor.IPlayerControllerMP
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import com.paragon.util.player.InventoryUtil
 import com.paragon.util.player.PlacementUtil
 import com.paragon.util.player.RotationUtil
+import com.paragon.util.render.ColourUtil.integrateAlpha
 import com.paragon.util.render.builder.RenderBuilder
 import com.paragon.util.world.BlockUtil
 import com.paragon.util.world.BlockUtil.getBlockAtPos
@@ -33,6 +35,7 @@ import kotlin.math.floor
  * @author Surge
  * @since 23/08/2022
  */
+@Aliases(["AutoObsidian", "FeetTrap"])
 object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds you with obsidian") {
 
     private val performOn = Setting("PerformOn", PerformOn.PACKET) describedBy "When to perform"
@@ -53,7 +56,7 @@ object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds y
     private val placedCache = CopyOnWriteArrayList<BlockPos>()
 
     override fun onEnable() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
@@ -67,16 +70,16 @@ object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds y
         when (center.value) {
             Center.MOTION -> {
                 // Set player's motion to walk to the center of the block
-                minecraft.player.motionX = (MathHelper.floor(minecraft.player.posX) + 0.5 - minecraft.player.posX) / 2
-                minecraft.player.motionZ = (MathHelper.floor(minecraft.player.posZ) + 0.5 - minecraft.player.posZ) / 2
+                mc.player.motionX = (MathHelper.floor(mc.player.posX) + 0.5 - mc.player.posX) / 2
+                mc.player.motionZ = (MathHelper.floor(mc.player.posZ) + 0.5 - mc.player.posZ) / 2
             }
 
             Center.SNAP -> {
                 // Send movement packet
-                minecraft.player.connection.sendPacket(CPacketPlayer.Position(MathHelper.floor(minecraft.player.posX) + 0.5, minecraft.player.posY, MathHelper.floor(minecraft.player.posZ) + 0.5, minecraft.player.onGround))
+                mc.player.connection.sendPacket(CPacketPlayer.Position(MathHelper.floor(mc.player.posX) + 0.5, mc.player.posY, MathHelper.floor(mc.player.posZ) + 0.5, mc.player.onGround))
 
                 // Set position client-side
-                minecraft.player.setPosition(MathHelper.floor(minecraft.player.posX) + 0.5, minecraft.player.posY, MathHelper.floor(minecraft.player.posZ) + 0.5)
+                mc.player.setPosition(MathHelper.floor(mc.player.posX) + 0.5, mc.player.posY, MathHelper.floor(mc.player.posZ) + 0.5)
             }
 
             else -> {}
@@ -86,7 +89,7 @@ object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds y
     }
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
@@ -108,7 +111,7 @@ object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds y
             return
         }
 
-        if (!minecraft.player.onGround && disable.value == Disable.OFF_GROUND) {
+        if (!mc.player.onGround && disable.value == Disable.OFF_GROUND) {
             Paragon.INSTANCE.notificationManager.addNotification(Notification("Player is no longer on ground, disabling!", NotificationType.INFO))
             toggle()
             return
@@ -146,7 +149,7 @@ object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds y
             // It's a placeable position, and we haven't already attempted to place there
             if (!isNotReplaceable(pos) && !placedCache.contains(pos)) {
                 // Check sub (support) status
-                val sub = if (support.value && pos.down().getBlockAtPos().isReplaceable(minecraft.world, pos.down())) pos.down() else null
+                val sub = if (support.value && pos.down().getBlockAtPos().isReplaceable(mc.world, pos.down())) pos.down() else null
 
                 // Place sub block
                 if (sub != null) {
@@ -164,30 +167,32 @@ object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds y
 
     override fun onRender3D() {
         surroundPositions.forEach {
-            RenderBuilder().boundingBox(BlockUtil.getBlockBox(it)).inner(renderColour.value).outer(renderColour.value.integrateAlpha(255f))
-
+            RenderBuilder()
+                .boundingBox(BlockUtil.getBlockBox(it))
+                .inner(renderColour.value)
+                .outer(renderColour.value.integrateAlpha(255f))
                 .start()
-
-                .blend(true).texture(true).depth(true)
-
+                .blend(true)
+                .texture(true)
+                .depth(true)
                 .build(false)
         }
     }
 
-    private fun isNotReplaceable(pos: BlockPos): Boolean = !pos.getBlockAtPos().blockState.block.isReplaceable(minecraft.world, pos)
+    private fun isNotReplaceable(pos: BlockPos): Boolean = !pos.getBlockAtPos().blockState.block.isReplaceable(mc.world, pos)
 
     private fun getBlocks(origin: BlockPos): ArrayList<BlockPos> {
         val blocks = arrayListOf<BlockPos>()
 
         // If we don't want to support, ignore this block
-        if (!support.value && origin.getBlockAtPos().isReplaceable(minecraft.world, origin) && origin.down().getBlockAtPos().isReplaceable(minecraft.world, origin.down())) {
+        if (!support.value && origin.getBlockAtPos().isReplaceable(mc.world, origin) && origin.down().getBlockAtPos().isReplaceable(mc.world, origin.down())) {
             return blocks
         }
 
         // Check that the origin block is replaceable
-        if (origin.getBlockAtPos().isReplaceable(minecraft.world, origin)) {
+        if (origin.getBlockAtPos().isReplaceable(mc.world, origin)) {
             // If we want to support, and the block below is replaceable, add it to the list
-            if (support.value && origin.down().getBlockAtPos().isReplaceable(minecraft.world, origin.down())) {
+            if (support.value && origin.down().getBlockAtPos().isReplaceable(mc.world, origin.down())) {
                 blocks.add(origin.down())
             }
 
@@ -200,7 +205,7 @@ object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds y
 
     private fun getBlocks(): ArrayList<BlockPos> {
         val blocks = ArrayList<BlockPos>()
-        val playerPos = BlockPos(floor(minecraft.player.posX), floor(minecraft.player.posY), floor(minecraft.player.posZ)).add(0, 1, 0)
+        val playerPos = BlockPos(floor(mc.player.posX), floor(mc.player.posY), floor(mc.player.posZ)).add(0, 1, 0)
 
         // Add blocks
         blocks.addAll(getBlocks(playerPos.add(-1, -1, 0)))
@@ -213,15 +218,15 @@ object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds y
 
     private fun placeOnPosition(position: BlockPos) {
         // Get current item
-        val slot: Int = minecraft.player.inventory.currentItem
+        val slot: Int = mc.player.inventory.currentItem
 
         // Slot to switch to
         val obsidianSlot = InventoryUtil.getHotbarBlockSlot(Blocks.OBSIDIAN)
 
         if (obsidianSlot != -1) {
-            minecraft.player.inventory.currentItem = obsidianSlot
+            mc.player.inventory.currentItem = obsidianSlot
 
-            (minecraft.playerController as IPlayerControllerMP).hookSyncCurrentPlayItem()
+            (mc.playerController as IPlayerControllerMP).hookSyncCurrentPlayItem()
 
             // Get rotation yaw and pitch
             val rotationValues = RotationUtil.getRotationToBlockPos(position, 0.5)
@@ -230,8 +235,8 @@ object Surround : Module("Surround", Category.COMBAT, "Automatically surrounds y
             PlacementUtil.place(position, Rotation(rotationValues.x, rotationValues.y, rotate.value, RotationPriority.HIGH))
 
             // Reset slot to our original slot
-            minecraft.player.inventory.currentItem = slot
-            (minecraft.playerController as IPlayerControllerMP).hookSyncCurrentPlayItem()
+            mc.player.inventory.currentItem = slot
+            (mc.playerController as IPlayerControllerMP).hookSyncCurrentPlayItem()
         }
     }
 

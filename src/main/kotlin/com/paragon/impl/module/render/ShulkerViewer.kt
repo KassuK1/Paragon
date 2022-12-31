@@ -1,20 +1,20 @@
 package com.paragon.impl.module.render
 
-import com.paragon.impl.event.render.gui.RenderTooltipEvent
-import com.paragon.impl.module.Module
-import com.paragon.util.render.font.FontUtil.drawStringWithShadow
 import com.paragon.bus.listener.Listener
-import com.paragon.impl.module.client.Colours
+import com.paragon.impl.event.render.gui.RenderTooltipEvent
 import com.paragon.impl.module.Category
-import com.paragon.util.render.RenderUtil.drawBorder
-import com.paragon.util.render.RenderUtil.drawRect
-import com.paragon.util.render.RenderUtil.renderItemStack
+import com.paragon.impl.module.Module
+import com.paragon.impl.module.client.Colours
+import com.paragon.util.mc
+import com.paragon.util.render.RenderUtil
+import com.paragon.util.render.font.FontUtil
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.inventory.ItemStackHelper
 import net.minecraft.item.ItemShulkerBox
 import net.minecraft.item.ItemStack
 import net.minecraft.util.NonNullList
 import java.awt.Color
+import kotlin.math.max
 
 /**
  * @author Surge
@@ -29,6 +29,7 @@ object ShulkerViewer : Module("ShulkerViewer", Category.RENDER, "Preview shulker
 
         // Get stack compound
         val compound = event.stack.tagCompound
+
         // Has items
         if (compound != null && compound.hasKey("BlockEntityTag") && compound.getCompoundTag("BlockEntityTag").hasKey("Items", 9)) {
             event.cancel()
@@ -43,17 +44,16 @@ object ShulkerViewer : Module("ShulkerViewer", Category.RENDER, "Preview shulker
             // Y offset
             val y = event.y - 31
 
+            val width = max(166f, FontUtil.getStringWidth(event.stack.displayName) + 12)
+
             // Background
-            drawRect(event.x + 2, y, 168f, 71f, Color(23, 23, 25).rgb)
+            RenderUtil.drawRect(event.x + 2, y, width, 71f, Color(23, 23, 25))
 
             // Border
-            drawBorder(event.x + 2, y, 168f, 71f, 1f, Colours.mainColour.value.rgb)
+            RenderUtil.drawBorder(event.x + 2, y, width, 71f, 1f, Colours.mainColour.value)
 
             // Shulker box name
-            drawStringWithShadow(event.stack.displayName, event.x + 6, y + 2.5f, -1)
-
-            // Separator thing
-            drawRect(event.x + 2, y + 13, 168f, 1f, Colours.mainColour.value.rgb)
+            mc.fontRenderer.drawStringWithShadow(event.stack.displayName, event.x + 6, y + 3.5f, -1)
 
             // Item X and Y
             var itemX = event.x + 5
@@ -65,10 +65,10 @@ object ShulkerViewer : Module("ShulkerViewer", Category.RENDER, "Preview shulker
             // Iterate through items
             for (item in items) {
                 // Background thing
-                drawRect(itemX - 0.5f, itemY - 0.5f, 17f, 17f, Color(25, 25, 28).rgb)
+                RenderUtil.drawRect(itemX - 0.5f, itemY - 0.5f, 17f, 17f, Color(35, 35, 38))
 
                 // Render stack
-                renderItemStack(item, itemX, itemY, true)
+                RenderUtil.drawItemStack(item, itemX, itemY, true)
 
                 // Increase count
                 a++

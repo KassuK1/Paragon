@@ -5,15 +5,18 @@ import com.paragon.impl.event.world.entity.EntityPushEvent
 import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.bus.listener.Listener
+import com.paragon.impl.module.annotation.Aliases
 import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.ISPacketEntityVelocity
 import com.paragon.mixins.accessor.ISPacketExplosion
+import com.paragon.util.mc
 import net.minecraft.network.play.server.SPacketEntityVelocity
 import net.minecraft.network.play.server.SPacketExplosion
 
 /**
  * @author Surge
  */
+@Aliases(["AntiKnockback"])
 object Velocity : Module("Velocity", Category.MOVEMENT, "Stops crystals and mobs from causing you knockback") {
 
     private val velocityPacket = Setting("VelocityPacket", true) describedBy "Cancels or modifies the velocity packet"
@@ -26,7 +29,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT, "Stops crystals and mobs
     fun onPacket(event: PreReceive) {
         if (event.packet is SPacketEntityVelocity && velocityPacket.value) {
             // Check it is for us
-            if (event.packet.entityID == minecraft.player.entityId) {
+            if (event.packet.entityID == mc.player.entityId) {
                 // We can just cancel the packet if both horizontal and vertical are 0
                 if (horizontal.value == 0f && vertical.value == 0f) {
                     event.cancel()
@@ -53,7 +56,7 @@ object Velocity : Module("Velocity", Category.MOVEMENT, "Stops crystals and mobs
 
     @Listener
     fun onEntityPush(event: EntityPushEvent) {
-        if (noPush.value && event.entity === minecraft.player) {
+        if (noPush.value && event.entity === mc.player) {
             event.cancel()
         }
     }

@@ -1,6 +1,6 @@
 package com.paragon.util.render.builder
 
-import com.paragon.util.Wrapper
+import com.paragon.util.mc
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.RenderGlobal
 import net.minecraft.util.math.AxisAlignedBB
@@ -11,7 +11,7 @@ import java.awt.Color
  * @author Surge
  * @since 20/08/2022
  */
-class RenderBuilder : Wrapper {
+class RenderBuilder {
 
     private var depth = false
     private var blend = false
@@ -37,19 +37,29 @@ class RenderBuilder : Wrapper {
     fun build(offset: Boolean) {
         if (offset) {
             boundingBox = boundingBox.offset(
-                -minecraft.renderManager.viewerPosX, -minecraft.renderManager.viewerPosY, -minecraft.renderManager.viewerPosZ
+                -mc.renderManager.viewerPosX,
+                -mc.renderManager.viewerPosY,
+                -mc.renderManager.viewerPosZ
             )
         }
 
         if (renderMode == BoxRenderMode.FILL || renderMode == BoxRenderMode.BOTH) {
             RenderGlobal.renderFilledBox(
-                boundingBox, innerColour.red / 255f, innerColour.green / 255f, innerColour.blue / 255f, innerColour.alpha / 255f
+                boundingBox,
+                innerColour.red / 255f,
+                innerColour.green / 255f,
+                innerColour.blue / 255f,
+                innerColour.alpha / 255f
             )
         }
 
         if (renderMode == BoxRenderMode.OUTLINE || renderMode == BoxRenderMode.BOTH) {
             RenderGlobal.drawSelectionBoundingBox(
-                boundingBox, outerColour.red / 255f, outerColour.green / 255f, outerColour.blue / 255f, outerColour.alpha / 255f
+                boundingBox,
+                outerColour.red / 255f,
+                outerColour.green / 255f,
+                outerColour.blue / 255f,
+                outerColour.alpha / 255f
             )
         }
 

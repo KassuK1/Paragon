@@ -17,33 +17,36 @@ class EventBus {
 
     /**
      * Register an object
+     *
      * @param target The object to register
      */
     fun register(target: Any) {
         // Iterate through every method in the object's class
-        for (method in target.javaClass.declaredMethods) {
+        target.javaClass.declaredMethods.forEach {
             // Check if the method is 'good'
-            if (isMethodGood(method)) {
+            if (isMethodGood(it)) {
                 // Register the method to the map
-                registerMethod(method, target)
+                registerMethod(it, target)
             }
         }
     }
 
     /**
      * Unregister an object
+     *
      * @param obj The object to unregister
      */
     fun unregister(obj: Any) {
         // Iterate through every method in the map
         for (subscribedMethodList in subscribedMethods.values) {
             // Remove the method if the source is the obj parameter
-            subscribedMethodList.removeIf { method1: SubscribedMethod -> method1.source === obj }
+            subscribedMethodList.removeIf { it.source === obj }
         }
     }
 
     /**
      * Registers an undefined amount of objects
+     *
      * @param objList The list of objects to register
      */
     fun registerAll(vararg objList: Any) {
@@ -54,6 +57,7 @@ class EventBus {
 
     /**
      * Unregisters an undefined amount of objects
+     *
      * @param objList The list of objects to unregister
      */
     fun unregisterAll(vararg objList: Any) {
@@ -64,6 +68,7 @@ class EventBus {
 
     /**
      * Registers a singular method
+     *
      * @param method The method to register
      * @param obj The source
      */
@@ -99,6 +104,7 @@ class EventBus {
 
     /**
      * Posts an object to trigger an event
+     *
      * @param obj The object to post
      */
     fun post(obj: Any) {
@@ -116,6 +122,7 @@ class EventBus {
 
     /**
      * Check if a method is good
+     *
      * @param method The method to check
      * @return Whether it has one parameter (event), and it has the [Listener] annotation
      */
@@ -125,6 +132,7 @@ class EventBus {
 
     /**
      * Check if an object is registered to the bus
+     *
      * @param obj The object to check
      * @return Whether the object is registered
      */

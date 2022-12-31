@@ -4,8 +4,10 @@ import com.paragon.impl.event.input.KeybindingPressedEvent
 import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.bus.listener.Listener
+import com.paragon.impl.module.annotation.Aliases
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import net.minecraft.client.gui.GuiChat
 import net.minecraft.client.gui.GuiRepair
 import net.minecraft.client.settings.KeyBinding
@@ -16,6 +18,7 @@ import org.lwjgl.input.Keyboard
  * @author aesthetical, Surge
  * @since 07/14/2022
  */
+@Aliases(["InventoryMove", "GuiMove", "GuiWalk"])
 object InventoryWalk : Module("InventoryWalk", Category.MOVEMENT, "Lets you walk around in your inventory") {
 
     private val rotate = Setting(
@@ -27,11 +30,17 @@ object InventoryWalk : Module("InventoryWalk", Category.MOVEMENT, "Lets you walk
     ) describedBy "How fast to rotate" subOf rotate
 
     private val bindings = arrayOf(
-        minecraft.gameSettings.keyBindForward, minecraft.gameSettings.keyBindBack, minecraft.gameSettings.keyBindRight, minecraft.gameSettings.keyBindRight, minecraft.gameSettings.keyBindJump, minecraft.gameSettings.keyBindSneak, minecraft.gameSettings.keyBindSprint
+        mc.gameSettings.keyBindForward,
+        mc.gameSettings.keyBindBack,
+        mc.gameSettings.keyBindRight,
+        mc.gameSettings.keyBindRight,
+        mc.gameSettings.keyBindJump,
+        mc.gameSettings.keyBindSneak,
+        mc.gameSettings.keyBindSprint
     )
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
@@ -42,19 +51,19 @@ object InventoryWalk : Module("InventoryWalk", Category.MOVEMENT, "Lets you walk
 
             if (rotate.value) {
                 if (Keyboard.isKeyDown(Keyboard.KEY_UP)) {
-                    minecraft.player.rotationPitch -= rotateSpeed.value
+                    mc.player.rotationPitch -= rotateSpeed.value
                 }
                 else if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
-                    minecraft.player.rotationPitch += rotateSpeed.value
+                    mc.player.rotationPitch += rotateSpeed.value
                 }
                 else if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
-                    minecraft.player.rotationYaw -= rotateSpeed.value
+                    mc.player.rotationYaw -= rotateSpeed.value
                 }
                 else if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
-                    minecraft.player.rotationYaw += rotateSpeed.value
+                    mc.player.rotationYaw += rotateSpeed.value
                 }
 
-                minecraft.player.rotationPitch = MathHelper.clamp(minecraft.player.rotationPitch, -90.0f, 90.0f)
+                mc.player.rotationPitch = MathHelper.clamp(mc.player.rotationPitch, -90.0f, 90.0f)
             }
         }
     }
@@ -70,6 +79,6 @@ object InventoryWalk : Module("InventoryWalk", Category.MOVEMENT, "Lets you walk
     }
 
     private val isValidGUI: Boolean
-        get() = minecraft.currentScreen != null && minecraft.currentScreen !is GuiChat && minecraft.currentScreen !is GuiRepair
+        get() = mc.currentScreen != null && mc.currentScreen !is GuiChat && mc.currentScreen !is GuiRepair
 
 }

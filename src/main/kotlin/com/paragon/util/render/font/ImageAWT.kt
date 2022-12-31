@@ -18,7 +18,7 @@ import java.awt.image.BufferedImage
  * @since 27/08/2022
  */
 @SideOnly(Side.CLIENT)
-class ImageAWT(val font: Font, val startChar: Int, val stopChar: Int) {
+class ImageAWT(val font: Font, startChar: Int, stopChar: Int) {
 
     constructor(font: Font) : this(font, 0, 255)
 
@@ -37,7 +37,10 @@ class ImageAWT(val font: Font, val startChar: Int, val stopChar: Int) {
     }
 
     fun drawString(text: String, x: Double, y: Double, colour: Int) {
+        gcTick()
+
         glPushMatrix()
+        glEnable(GL_BLEND)
         glScaled(0.25, 0.25, 0.25)
         glTranslated(x * 2.0, y * 2.0, 0.0)
 
@@ -56,8 +59,6 @@ class ImageAWT(val font: Font, val startChar: Int, val stopChar: Int) {
             return
         }
 
-        var list = -1
-
         glBegin(GL_QUADS)
         text.toCharArray().forEach {
             if (Character.getNumericValue(it) >= charLocations.size) {
@@ -65,7 +66,7 @@ class ImageAWT(val font: Font, val startChar: Int, val stopChar: Int) {
 
                 glScaled(4.0, 4.0, 4.0)
 
-                Minecraft.getMinecraft().fontRenderer.drawString(it.toString(), (currX * 0.25f).toFloat(), 2.0f, colour, false)
+                Minecraft.getMinecraft().fontRenderer.drawString(it.toString(), (currX * 0.25f).toFloat(), 0.0f, colour, false)
 
                 currX += Minecraft.getMinecraft().fontRenderer.getStringWidth(it.toString()) * 4.0
 
@@ -79,7 +80,11 @@ class ImageAWT(val font: Font, val startChar: Int, val stopChar: Int) {
                 return@forEach
             }
 
-            val fontChar = charLocations[it.code]
+            val fontChar = try {
+                charLocations[it.code]
+            } catch (throwable: Throwable) {
+                charLocations[0]
+            }
 
             if (charLocations.size <= it.code || fontChar == null) {
                 return@forEach
@@ -97,9 +102,8 @@ class ImageAWT(val font: Font, val startChar: Int, val stopChar: Int) {
 
     fun getStringWidth(text: String): Int {
         var width = 0
-
         text.toCharArray().forEach {
-            var index = if (it.code < charLocations.size) it.code else 3
+            val index = if (it.code < charLocations.size) it.code else 3
 
             val fontChar = charLocations[index]
 
@@ -215,8 +219,6 @@ class ImageAWT(val font: Font, val startChar: Int, val stopChar: Int) {
     }
 
     private fun drawCharToImage(ch: Char): BufferedImage {
-        var charHeight = 0
-
         val graphics2D = BufferedImage(1, 1, 2).graphics as Graphics2D
         graphics2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
         graphics2D.font = font
@@ -229,7 +231,7 @@ class ImageAWT(val font: Font, val startChar: Int, val stopChar: Int) {
             charWidth = 7
         }
 
-        charHeight = metrics.height + 3
+        var charHeight: Int = metrics.height + 3
 
         if (charHeight <= 0) {
             charHeight = font.size
@@ -242,7 +244,7 @@ class ImageAWT(val font: Font, val startChar: Int, val stopChar: Int) {
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
         graphics.font = font
         graphics.color = Color.WHITE
-        graphics.drawString(ch.toString(), 3, 1 + metrics.ascent)
+        graphics.drawString(ch.toString(), 0, metrics.ascent)
 
         return fontImage
     }

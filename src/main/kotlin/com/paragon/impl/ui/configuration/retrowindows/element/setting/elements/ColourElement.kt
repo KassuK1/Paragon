@@ -7,6 +7,7 @@ import com.paragon.impl.ui.configuration.retrowindows.element.module.ModuleEleme
 import com.paragon.impl.ui.configuration.retrowindows.element.setting.SettingElement
 import com.paragon.impl.ui.util.Click
 import com.paragon.util.calculations.MathsUtil
+import com.paragon.util.render.ColourUtil.integrateAlpha
 import com.paragon.util.render.RenderUtil
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.Tessellator
@@ -54,15 +55,15 @@ class ColourElement(parent: ModuleElement, setting: Setting<Color>, x: Float, y:
     override fun draw(mouseX: Float, mouseY: Float, mouseDelta: Int) {
         super.draw(mouseX, mouseY, mouseDelta)
 
-        RenderUtil.drawRect(x + 3, y + 3, width - 4, height - 4, Color(100, 100, 100).rgb)
-        RenderUtil.drawRect(x + 2, y + 2, width - 4, height - 4, Color(130, 130, 130).rgb)
+        RenderUtil.drawRect(x + 3, y + 3, width - 4, height - 4, Color(100, 100, 100))
+        RenderUtil.drawRect(x + 2, y + 2, width - 4, height - 4, Color(130, 130, 130))
 
-        RenderUtil.drawHorizontalGradientRect(x + 2, y + 2, ((width - 4) * expanded.getAnimationFactor()).toFloat(), height - 4, setting.value.rgb, if (ClickGUI.gradient.value) setting.value.brighter().brighter().rgb else setting.value.rgb)
+        RenderUtil.drawHorizontalGradientRect(x + 2, y + 2, ((width - 4) * expanded.getAnimationFactor()).toFloat(), height - 4, setting.value, if (ClickGUI.gradient.value) setting.value.brighter().brighter() else setting.value)
 
         glScalef(0.8f, 0.8f, 0.8f)
 
         val scaleFactor = 1 / 0.8f
-        FontUtil.drawStringWithShadow(setting.name, (x + 5) * scaleFactor, (y + 5f) * scaleFactor, -1)
+        FontUtil.drawStringWithShadow(setting.name, (x + 5) * scaleFactor, (y + 5f) * scaleFactor, Color.WHITE)
 
         glScalef(scaleFactor, scaleFactor, scaleFactor)
 
@@ -76,7 +77,7 @@ class ColourElement(parent: ModuleElement, setting: Setting<Color>, x: Float, y:
 
             val scissorY = MathHelper.clamp(y, parent.parent.y + parent.parent.height, (parent.parent.y + parent.parent.height + parent.parent.scissorHeight) - getTotalHeight())
 
-            RenderUtil.pushScissor(x.toDouble(), scissorY.toDouble(), width.toDouble(), getTotalHeight().toDouble())
+            RenderUtil.pushScissor(x, scissorY, width, getTotalHeight())
 
             drawPicker(xPicker, y + height + 2, pickerWidth, colour)
 
@@ -103,7 +104,7 @@ class ColourElement(parent: ModuleElement, setting: Setting<Color>, x: Float, y:
                     MathsUtil.roundDouble((brightDiff / pickerWidth * 100).toDouble(), 0).toFloat()
                 }
 
-                finalColour = Color(Color.HSBtoRGB(hueSetting.value.toFloat() / 360, saturation / 100, brightness / 100))
+                finalColour = Color(Color.HSBtoRGB(hueSetting.value.toFloat() / 360, saturation / 100, brightness / 100)).integrateAlpha(alphaSetting.value.toFloat())
             }
 
             subSettings.forEach {
@@ -123,8 +124,8 @@ class ColourElement(parent: ModuleElement, setting: Setting<Color>, x: Float, y:
             val pickerY: Float = y + height + 2 + (1 - finHSB[2]) * pickerWidth
 
             // Draw picker highlight
-            RenderUtil.drawRect(pickerX - 1.5f, pickerY - 1.5f, 3f, 3f, -1)
-            RenderUtil.drawRect(pickerX - 1, pickerY - 1, 2f, 2f, finalColour.rgb)
+            RenderUtil.drawRect(pickerX - 1.5f, pickerY - 1.5f, 3f, 3f, Color.WHITE)
+            RenderUtil.drawRect(pickerX - 1, pickerY - 1, 2f, 2f, finalColour)
 
             subSettings.forEach {
                 it.x = x + 2
@@ -138,11 +139,11 @@ class ColourElement(parent: ModuleElement, setting: Setting<Color>, x: Float, y:
             RenderUtil.popScissor()
         }
 
-        setting.alpha = alphaSetting.value.toFloat()
         setting.isSync = syncSetting.value
         setting.isRainbow = rainbowSetting.value
         setting.rainbowSpeed = rainbowSpeedSetting.value.toFloat()
         setting.rainbowSaturation = rainbowSaturationSetting.value.toFloat()
+
         setting.setValue(finalColour)
     }
 
@@ -175,7 +176,7 @@ class ColourElement(parent: ModuleElement, setting: Setting<Color>, x: Float, y:
         GlStateManager.enableTexture2D()
         GlStateManager.popMatrix()
 
-        RenderUtil.drawBorder(x, y, dimension, dimension, 0.5f, -1)
+        RenderUtil.drawBorder(x, y, dimension, dimension, 0.5f, Color.WHITE)
     }
 
     override fun mouseClicked(mouseX: Float, mouseY: Float, click: Click) {

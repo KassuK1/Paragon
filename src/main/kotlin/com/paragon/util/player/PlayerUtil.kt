@@ -1,6 +1,8 @@
 package com.paragon.util.player
 
-import com.paragon.util.Wrapper
+import com.paragon.mixins.accessor.IMinecraft
+import com.paragon.mixins.accessor.ITimer
+import com.paragon.util.mc
 import com.paragon.util.world.BlockUtil.getBlockAtPos
 import net.minecraft.client.renderer.EnumFaceDirection
 import net.minecraft.entity.Entity
@@ -11,37 +13,39 @@ import net.minecraft.util.EnumFacing
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import kotlin.math.cos
+import kotlin.math.hypot
 import kotlin.math.sin
 
-object PlayerUtil : Wrapper {
+object PlayerUtil {
 
+    /**
+     * Stops all movements of the player on the X/Y axis.
+     */
     @JvmStatic
-    fun stopMotion(fallSpeed: Float) {
-        minecraft.player.setVelocity(0.0, fallSpeed.toDouble(), 0.0)
-    }
+    fun stopMotion(fallSpeed: Float) = mc.player.setVelocity(0.0, fallSpeed.toDouble(), 0.0)
 
     val isCollided: Boolean
-        get() = minecraft.player.collidedHorizontally || minecraft.player.collidedVertically
+        get() = mc.player.collidedHorizontally || mc.player.collidedVertically
 
     val isInLiquid: Boolean
-        get() = minecraft.player.isInWater || minecraft.player.isInLava
+        get() = mc.player.isInWater || mc.player.isInLava
 
     @JvmStatic
     fun lockLimbs() {
-        minecraft.player.prevLimbSwingAmount = 0f
-        minecraft.player.limbSwingAmount = 0f
-        minecraft.player.limbSwing = 0f
+        mc.player.prevLimbSwingAmount = 0f
+        mc.player.limbSwingAmount = 0f
+        mc.player.limbSwing = 0f
     }
 
     val isMoving: Boolean
-        get() = minecraft.player.movementInput.moveForward != 0f || minecraft.player.movementInput.moveStrafe != 0f || minecraft.player.posX != minecraft.player.lastTickPosX || minecraft.player.posZ != minecraft.player.lastTickPosZ
+        get() = mc.player.movementInput.moveForward != 0f || mc.player.movementInput.moveStrafe != 0f || mc.player.posX != mc.player.lastTickPosX || mc.player.posZ != mc.player.lastTickPosZ
 
     @JvmStatic
     fun move(speed: Float) {
-        val mover = if (minecraft.player.isRiding) minecraft.player.ridingEntity else minecraft.player
-        var forward = minecraft.player.movementInput.moveForward
-        var strafe = minecraft.player.movementInput.moveStrafe
-        var playerYaw = minecraft.player.rotationYaw
+        val mover = if (mc.player.isRiding) mc.player.ridingEntity else mc.player
+        var forward = mc.player.movementInput.moveForward
+        var strafe = mc.player.movementInput.moveStrafe
+        var playerYaw = mc.player.rotationYaw
 
         if (mover != null) {
             if (forward != 0f) {
@@ -78,9 +82,9 @@ object PlayerUtil : Wrapper {
     }
 
     fun forward(speed: Double): Vec3d {
-        var forwardInput = minecraft.player.movementInput.moveForward
-        var strafeInput = minecraft.player.movementInput.moveStrafe
-        var playerYaw = minecraft.player.prevRotationYaw + (minecraft.player.rotationYaw - minecraft.player.prevRotationYaw) * minecraft.renderPartialTicks
+        var forwardInput = mc.player.movementInput.moveForward
+        var strafeInput = mc.player.movementInput.moveStrafe
+        var playerYaw = mc.player.prevRotationYaw + (mc.player.rotationYaw - mc.player.prevRotationYaw) * mc.renderPartialTicks
 
         if (forwardInput != 0.0f) {
             if (strafeInput > 0.0f) {
@@ -106,54 +110,74 @@ object PlayerUtil : Wrapper {
         val posX = forwardInput * speed * cos + strafeInput * speed * sin
         val posZ = forwardInput * speed * sin - strafeInput * speed * cos
 
-        return Vec3d(posX, minecraft.player.posY, posZ)
+        return Vec3d(posX, mc.player.posY, posZ)
     }
 
     @JvmStatic
     fun propel(speed: Float) {
-        val yaw = minecraft.player.rotationYaw
+        val yaw = mc.player.rotationYaw
 
-        val pitch = minecraft.player.rotationPitch
-        minecraft.player.motionX -= sin(Math.toRadians(yaw.toDouble())) * cos(Math.toRadians(pitch.toDouble())) * speed
-        minecraft.player.motionZ += cos(Math.toRadians(yaw.toDouble())) * cos(Math.toRadians(pitch.toDouble())) * speed
-        minecraft.player.motionY += -sin(Math.toRadians(pitch.toDouble())) * speed
+        val pitch = mc.player.rotationPitch
+        mc.player.motionX -= sin(Math.toRadians(yaw.toDouble())) * cos(Math.toRadians(pitch.toDouble())) * speed
+        mc.player.motionZ += cos(Math.toRadians(yaw.toDouble())) * cos(Math.toRadians(pitch.toDouble())) * speed
+        mc.player.motionY += -sin(Math.toRadians(pitch.toDouble())) * speed
     }
 
     val isPlayerEating: Boolean
-        get() = minecraft.player.isHandActive && minecraft.player.activeItemStack.itemUseAction == EnumAction.EAT
+        get() = mc.player.isHandActive && mc.player.activeItemStack.itemUseAction == EnumAction.EAT
 
     val isPlayerDrinking: Boolean
-        get() = minecraft.player.isHandActive && minecraft.player.activeItemStack.itemUseAction == EnumAction.DRINK
+        get() = mc.player.isHandActive && mc.player.activeItemStack.itemUseAction == EnumAction.DRINK
 
     val isPlayerConsuming: Boolean
-        get() = minecraft.player.isHandActive && (minecraft.player.activeItemStack.itemUseAction == EnumAction.EAT || minecraft.player.activeItemStack.itemUseAction == EnumAction.DRINK)
+        get() = mc.player.isHandActive && (mc.player.activeItemStack.itemUseAction == EnumAction.EAT || mc.player.activeItemStack.itemUseAction == EnumAction.DRINK)
 
     val direction: EnumFaceDirection
-        get() = EnumFaceDirection.getFacing(EnumFacing.fromAngle(minecraft.player.rotationYaw.toDouble()))
+        get() = EnumFaceDirection.getFacing(EnumFacing.fromAngle(mc.player.rotationYaw.toDouble()))
 
-    fun getAxis(direction: EnumFaceDirection?): String {
-        when (direction) {
-            EnumFaceDirection.NORTH -> return "-Z"
-            EnumFaceDirection.SOUTH -> return "+Z"
-            EnumFaceDirection.EAST -> return "+X"
-            EnumFaceDirection.WEST -> return "-X"
-            else -> {}
-        }
-
-        return ""
+    fun getAxis(direction: EnumFaceDirection?) = when (direction) {
+        EnumFaceDirection.NORTH -> "-Z"
+        EnumFaceDirection.SOUTH -> "+Z"
+        EnumFaceDirection.EAST -> "+X"
+        EnumFaceDirection.WEST -> "-X"
+        else -> ""
     }
 
     val baseMoveSpeed: Double
-        get() = 0.2873 * if (minecraft.player.isPotionActive(MobEffects.SPEED)) 1.0 + 0.2 * (minecraft.player.getActivePotionEffect(MobEffects.SPEED)!!.amplifier + 1.0) else 1.0
+        get() = 0.2873 * if (mc.player.isPotionActive(MobEffects.SPEED)) 1.0 + 0.2 * (mc.player.getActivePotionEffect(MobEffects.SPEED)!!.amplifier + 1.0) else 1.0
 
+
+    /**
+     * @return the block under the given [Entity].
+     */
     fun getBlockUnder(player: Entity): BlockPos? {
         var pos = BlockPos(player.posX, player.posY, player.posZ)
-        var blockAtPos = pos.getBlockAtPos()
-        while (pos.y > -2 && blockAtPos === Blocks.AIR) {
+        while (pos.y > -2 && pos.getBlockAtPos() === Blocks.AIR) {
             pos = pos.down()
-            blockAtPos = pos.getBlockAtPos()
         }
         return if (pos.y < 0) null else pos
+    }
+
+    fun getSpeed(unit: Unit): Double {
+        return unit.algorithm.invoke(hypot(mc.player.posX - mc.player.lastTickPosX, mc.player.posZ - mc.player.lastTickPosZ) * (1000 / ((mc as IMinecraft).hookGetTimer() as ITimer).hookGetTickLength()).toDouble())
+    }
+
+    enum class Unit(val algorithm: (Double) -> Double) {
+        /**
+         * Speed in blocks per second
+         */
+        BPS({ it }),
+
+        /**
+         * Speed in kilometers (1000 blocks) per hour
+         */
+        KMH({ it * 3.6 }),
+
+        /**
+         * Speed in miles (1.60934 km) per hour
+         */
+        MPH({ it * 2.237 });
+
     }
 
 }

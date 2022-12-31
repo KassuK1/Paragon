@@ -8,6 +8,7 @@ import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.ICPacketPlayer
 import com.paragon.mixins.accessor.IPlayerControllerMP
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import com.paragon.util.player.InventoryUtil.getItemInHotbar
 import com.paragon.util.player.InventoryUtil.switchToSlot
 import net.minecraft.init.Items
@@ -29,31 +30,31 @@ object NoFall : Module("NoFall", Category.MOVEMENT, "Disables fall damage") {
     ) describedBy "Don't attempt to place a water bucket when flying with an elytra" visibleWhen { mode.value == Mode.BUCKET }
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         // Ignore if we are flying with an elytra, or we are in creative mode
-        @Suppress("IncorrectFormatting") if (minecraft.player.isElytraFlying && ignoreElytra.value || minecraft.playerController.currentGameType.equals(GameType.CREATIVE)) {
+        @Suppress("IncorrectFormatting") if (mc.player.isElytraFlying && ignoreElytra.value || mc.playerController.currentGameType.equals(GameType.CREATIVE)) {
             return
         }
 
         // We are going to take damage from falling, and we aren't over water
-        if (minecraft.player.fallDistance > 3 && !minecraft.player.isOverWater) {
+        if (mc.player.fallDistance > 3 && !mc.player.isOverWater) {
             when (mode.value) {
-                Mode.VANILLA -> minecraft.player.connection.sendPacket(CPacketPlayer(true)) // Send a packet that says that we are on the ground
+                Mode.VANILLA -> mc.player.connection.sendPacket(CPacketPlayer(true)) // Send a packet that says that we are on the ground
 
                 Mode.RUBBERBAND -> {
                     // Send an invalid packet
-                    minecraft.player.connection.sendPacket(
+                    mc.player.connection.sendPacket(
                         CPacketPlayer.Position(
-                            minecraft.player.motionX, 0.0, minecraft.player.motionZ, true
+                            mc.player.motionX, 0.0, mc.player.motionZ, true
                         )
                     )
 
                     // Set the fall distance to 0
                     if (spoofFall.value) {
-                        minecraft.player.fallDistance = 0f
+                        mc.player.fallDistance = 0f
                     }
                 }
 
@@ -64,21 +65,21 @@ object NoFall : Module("NoFall", Category.MOVEMENT, "Disables fall damage") {
                         switchToSlot(getItemInHotbar(Items.WATER_BUCKET), false)
 
                         // Sync
-                        (minecraft.playerController as IPlayerControllerMP).hookSyncCurrentPlayItem()
+                        (mc.playerController as IPlayerControllerMP).hookSyncCurrentPlayItem()
 
                         // Send rotation packet
-                        minecraft.player.connection.sendPacket(
+                        mc.player.connection.sendPacket(
                             CPacketPlayer.Rotation(
-                                minecraft.player.rotationYaw, 90f, false
+                                mc.player.rotationYaw, 90f, false
                             )
                         )
 
                         // Set client rotation
-                        minecraft.player.rotationPitch = 90f
+                        mc.player.rotationPitch = 90f
 
                         // Attempt to place water bucket
-                        minecraft.playerController.processRightClick(
-                            minecraft.player, minecraft.world, EnumHand.MAIN_HAND
+                        mc.playerController.processRightClick(
+                            mc.player, mc.world, EnumHand.MAIN_HAND
                         )
                     }
 
@@ -89,12 +90,12 @@ object NoFall : Module("NoFall", Category.MOVEMENT, "Disables fall damage") {
 
     @Listener
     fun onPacketSent(event: PreSend) {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         // Ignore if we are flying with an elytra, or we are in creative mode
-        @Suppress("IncorrectFormatting") if (minecraft.player.isElytraFlying && ignoreElytra.value || minecraft.playerController.currentGameType.equals(GameType.CREATIVE)) {
+        @Suppress("IncorrectFormatting") if (mc.player.isElytraFlying && ignoreElytra.value || mc.playerController.currentGameType.equals(GameType.CREATIVE)) {
             return
         }
 
@@ -102,7 +103,7 @@ object NoFall : Module("NoFall", Category.MOVEMENT, "Disables fall damage") {
         if (event.packet is CPacketPlayer) {
             if (mode.value == Mode.PACKET_MODIFY) {
                 // Set packet Y
-                (event.packet as ICPacketPlayer).hookSetY(minecraft.player.posY + 1)
+                (event.packet as ICPacketPlayer).hookSetY(mc.player.posY + 1)
 
                 // Set packet onGround
                 (event.packet as ICPacketPlayer).hookSetOnGround(true)

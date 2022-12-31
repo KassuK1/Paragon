@@ -2,6 +2,7 @@ package com.paragon.mixins.network;
 
 import com.paragon.Paragon;
 import com.paragon.impl.event.network.PacketEvent;
+import com.paragon.impl.event.network.ServerEvent;
 import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
@@ -45,4 +46,8 @@ public class MixinNetworkManager {
         Paragon.INSTANCE.getEventBus().post(postSend);
     }
 
+    @Inject(method = "closeChannel", at = @At(value = "HEAD"))
+    private void onCloseChannel(CallbackInfo ci) {
+        Paragon.INSTANCE.getEventBus().post(new ServerEvent.Disconnect(true));
+    }
 }

@@ -4,6 +4,7 @@ import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import net.minecraft.client.gui.GuiMainMenu
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -27,19 +28,19 @@ object AutoLog : Module("AutoLog", Category.MISC, "Automatically logs you out wh
     ) describedBy "Disables the module after logging you out"
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        if (minecraft.player.health <= health.value) {
+        if (mc.player.health <= health.value) {
             when (logMode.value) {
-                DisconnectMode.KICK -> minecraft.player.inventory.currentItem = -1
+                DisconnectMode.KICK -> mc.player.inventory.currentItem = -1
 
                 DisconnectMode.DISCONNECT -> {
                     // Disconnect from server
-                    minecraft.world.sendQuittingDisconnectingPacket()
-                    minecraft.loadWorld(null)
-                    minecraft.displayGuiScreen(GuiMainMenu())
+                    mc.world.sendQuittingDisconnectingPacket()
+                    mc.loadWorld(null)
+                    mc.displayGuiScreen(GuiMainMenu())
                 }
             }
 

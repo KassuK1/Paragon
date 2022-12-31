@@ -1,15 +1,17 @@
 package com.paragon.impl.module.combat
 
 import com.paragon.Paragon
-import com.paragon.impl.module.Module
-import com.paragon.impl.setting.Setting
 import com.paragon.impl.managers.rotation.Rotate
 import com.paragon.impl.managers.rotation.Rotation
 import com.paragon.impl.managers.rotation.RotationPriority
 import com.paragon.impl.module.Category
+import com.paragon.impl.module.Module
+import com.paragon.impl.module.annotation.Aliases
+import com.paragon.impl.setting.Setting
 import com.paragon.util.anyNull
 import com.paragon.util.calculations.Timer
 import com.paragon.util.entity.EntityUtil.isEntityAllowed
+import com.paragon.util.mc
 import com.paragon.util.player.EntityFakePlayer
 import com.paragon.util.player.InventoryUtil.getItemSlot
 import com.paragon.util.player.InventoryUtil.isHoldingSword
@@ -32,10 +34,11 @@ import java.util.stream.Collectors
  * @author Surge
  */
 @SideOnly(Side.CLIENT)
+@Aliases(["KillAura", "Forcefield"])
 object Aura : Module("Aura", Category.COMBAT, "Automatically attacks entities") {
 
     // How to sort the targets
-    private val sort = Setting("Sort", com.paragon.impl.module.combat.Aura.Sort.DISTANCE, null, null, null) describedBy "How to sort the targets"
+    private val sort = Setting("Sort", Sort.DISTANCE, null, null, null) describedBy "How to sort the targets"
 
     // Filters
     private val players = Setting("Players", true) describedBy "Attack players"
@@ -44,20 +47,13 @@ object Aura : Module("Aura", Category.COMBAT, "Automatically attacks entities") 
 
     // Main settings
     private val range = Setting("Range", 5f, 0f, 6f, 0.1f) describedBy "The range to attack"
-
-    private val delay = Setting(
-        "Delay", 700.0, 0.0, 2000.0, 1.0
-    ) describedBy "The delay between attacking in milliseconds"
-
-    private val performWhen = Setting("When", com.paragon.impl.module.combat.Aura.When.HOLDING) describedBy "When to attack"
+    private val delay = Setting("Delay", 700.0, 0.0, 2000.0, 1.0) describedBy "The delay between attacking in milliseconds"
+    private val performWhen = Setting("When", When.HOLDING) describedBy "When to attack"
 
     private val rotate = Setting("Rotate", Rotate.PACKET) describedBy "How to rotate to the target"
+    private val rotateBack = Setting("RotateBack", true) describedBy "Rotate back to your original rotation" subOf rotate
 
-    private val rotateBack = Setting(
-        "RotateBack", true
-    ) describedBy "Rotate back to your original rotation" subOf com.paragon.impl.module.combat.Aura.rotate
-
-    private val where = Setting("Where", com.paragon.impl.module.combat.Aura.Where.BODY) describedBy "Where to attack"
+    private val where = Setting("Where", Where.BODY) describedBy "Where to attack"
     private val packetAttack = Setting("Packet", false) describedBy "Attack with a packet"
 
     var lastTarget: EntityLivingBase? = null
@@ -67,73 +63,78 @@ object Aura : Module("Aura", Category.COMBAT, "Automatically attacks entities") 
     private var target: EntityLivingBase? = null
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        com.paragon.impl.module.combat.Aura.target = null
+        target = null
 
         // Check the delay has passed
-        if (com.paragon.impl.module.combat.Aura.attackTimer.hasMSPassed(com.paragon.impl.module.combat.Aura.delay.value)) {
+        if (attackTimer.hasMSPassed(delay.value)) {
             // Filter entities
-            var entities = minecraft.world.loadedEntityList.stream().filter {
+            var entities = mc.world.loadedEntityList.stream().filter {
                 EntityLivingBase::class.java.isInstance(it)
             }.collect(Collectors.toList())
 
             // Filter entities based on settings
             entities = entities.stream().filter {
-                it.getDistance(minecraft.player) <= com.paragon.impl.module.combat.Aura.range.value && it !== minecraft.player && !it.isDead && (it.isEntityAllowed(
-                    com.paragon.impl.module.combat.Aura.players.value, com.paragon.impl.module.combat.Aura.mobs.value, com.paragon.impl.module.combat.Aura.passives.value
+                it.getDistance(mc.player) <= range.value && it !== mc.player && !it.isDead && (it.isEntityAllowed(
+                    players.value,
+                    mobs.value,
+                    passives.value
                 ) || it is EntityFakePlayer) && (it !is EntityPlayer || !Paragon.INSTANCE.friendManager.isFriend(it.getName()))
             }.collect(Collectors.toList())
 
             // Sort entities
             entities = entities.sortedWith(Comparator.comparingDouble {
-                com.paragon.impl.module.combat.Aura.sort.value!!.getSort(it as EntityLivingBase).toDouble()
+                sort.value!!.getSort(it as EntityLivingBase).toDouble()
             })
 
             // Check we have targets
             if (entities.isNotEmpty()) {
                 // Get the target
                 val entityLivingBase = entities[0] as EntityLivingBase
-                com.paragon.impl.module.combat.Aura.target = entityLivingBase
-                com.paragon.impl.module.combat.Aura.lastTarget = com.paragon.impl.module.combat.Aura.target
+                target = entityLivingBase
+                lastTarget = target
 
                 // Get our old slot
-                val oldSlot: Int = minecraft.player.inventory.currentItem
-                when (com.paragon.impl.module.combat.Aura.performWhen.value) {
-                    com.paragon.impl.module.combat.Aura.When.SILENT_SWITCH, com.paragon.impl.module.combat.Aura.When.SWITCH -> {
+                val oldSlot: Int = mc.player.inventory.currentItem
+                when (performWhen.value) {
+                    When.SILENT_SWITCH, When.SWITCH -> {
                         if (!isHoldingSword) {
                             val swordSlot = getItemSlot(Items.DIAMOND_SWORD)
 
                             if (swordSlot > -1) {
                                 switchToSlot(swordSlot, false)
-                            }
-                            else {
-                                com.paragon.impl.module.combat.Aura.lastTarget = null
+                            } else {
+                                lastTarget = null
                                 return
                             }
                         }
 
                         if (!isHoldingSword) {
-                            com.paragon.impl.module.combat.Aura.lastTarget = null
+                            lastTarget = null
                             return
                         }
                     }
 
-                    com.paragon.impl.module.combat.Aura.When.HOLDING -> if (!isHoldingSword) {
-                        com.paragon.impl.module.combat.Aura.lastTarget = null
+                    When.HOLDING -> if (!isHoldingSword) {
+                        lastTarget = null
                         return
                     }
                 }
 
                 // Get our original rotation
-                val originalRotation = Vec2f(minecraft.player.rotationYaw, minecraft.player.rotationPitch)
+                val originalRotation = Vec2f(mc.player.rotationYaw, mc.player.rotationPitch)
 
                 // Get our target rotation
                 val rotationVec = getRotationToVec3d(
                     Vec3d(
-                        entityLivingBase.posX, entityLivingBase.posY + com.paragon.impl.module.combat.Aura.where.value.getWhere(entityLivingBase), entityLivingBase.posZ
+                        entityLivingBase.posX,
+                        entityLivingBase.posY + where.value.getWhere(
+                            entityLivingBase
+                        ),
+                        entityLivingBase.posZ
                     )
                 )
                 val rotation = Rotation(rotationVec.x, rotationVec.y, rotate.value, RotationPriority.HIGH)
@@ -142,21 +143,20 @@ object Aura : Module("Aura", Category.COMBAT, "Automatically attacks entities") 
                 Paragon.INSTANCE.rotationManager.addRotation(rotation)
 
                 // Attack the target
-                if (com.paragon.impl.module.combat.Aura.packetAttack.value) {
-                    minecraft.player.connection.sendPacket(CPacketUseEntity(entityLivingBase, EnumHand.MAIN_HAND))
-                }
-                else {
-                    minecraft.playerController.attackEntity(minecraft.player, entityLivingBase)
+                if (packetAttack.value) {
+                    mc.player.connection.sendPacket(CPacketUseEntity(entityLivingBase, EnumHand.MAIN_HAND))
+                } else {
+                    mc.playerController.attackEntity(mc.player, entityLivingBase)
                 }
 
                 // Swing hand
-                minecraft.player.swingArm(EnumHand.MAIN_HAND)
+                mc.player.swingArm(EnumHand.MAIN_HAND)
 
                 // Reset our cooldown
-                minecraft.player.resetCooldown()
+                mc.player.resetCooldown()
 
                 // Rotate back to the original rotation
-                if (com.paragon.impl.module.combat.Aura.rotateBack.value && com.paragon.impl.module.combat.Aura.rotate.value != Rotate.NONE) {
+                if (rotateBack.value && rotate.value != Rotate.NONE) {
                     val rotationBack = Rotation(
                         originalRotation.x, originalRotation.y, rotate.value, RotationPriority.NORMAL
                     )
@@ -164,25 +164,24 @@ object Aura : Module("Aura", Category.COMBAT, "Automatically attacks entities") 
                 }
 
                 // Switch back to the old slot
-                if (oldSlot != minecraft.player.inventory.currentItem && com.paragon.impl.module.combat.Aura.performWhen.value == com.paragon.impl.module.combat.Aura.When.SILENT_SWITCH) {
+                if (oldSlot != mc.player.inventory.currentItem && performWhen.value == When.SILENT_SWITCH) {
                     switchToSlot(oldSlot, false)
                 }
+            } else {
+                lastTarget = null
             }
-            else {
-                com.paragon.impl.module.combat.Aura.lastTarget = null
-            }
-            com.paragon.impl.module.combat.Aura.attackTimer.reset()
+            attackTimer.reset()
         }
     }
 
     private val isReady: Boolean
         get() {
-            if (minecraft.anyNull) {
+            if (mc.anyNull) {
                 return false
             }
 
-            when (com.paragon.impl.module.combat.Aura.performWhen.value) {
-                com.paragon.impl.module.combat.Aura.When.SILENT_SWITCH, com.paragon.impl.module.combat.Aura.When.SWITCH -> {
+            when (performWhen.value) {
+                When.SILENT_SWITCH, When.SWITCH -> {
                     if (!isHoldingSword) {
                         val swordSlot = getItemSlot(Items.DIAMOND_SWORD)
                         return swordSlot > -1
@@ -192,18 +191,18 @@ object Aura : Module("Aura", Category.COMBAT, "Automatically attacks entities") 
                     }
                 }
 
-                com.paragon.impl.module.combat.Aura.When.HOLDING -> if (isHoldingSword) return true
+                When.HOLDING -> if (isHoldingSword) return true
             }
 
             return false
         }
 
     override fun getData(): String {
-        return if (com.paragon.impl.module.combat.Aura.target == null) "No target" else com.paragon.impl.module.combat.Aura.target!!.name
+        return if (target == null) "No target" else target!!.name
     }
 
     override fun isActive(): Boolean {
-        return super.isActive() && com.paragon.impl.module.combat.Aura.target != null && com.paragon.impl.module.combat.Aura.isReady
+        return super.isActive() && target != null && isReady
     }
 
     @Suppress("unused")
@@ -211,7 +210,7 @@ object Aura : Module("Aura", Category.COMBAT, "Automatically attacks entities") 
         /**
          * Sort by distance
          */
-        DISTANCE({ minecraft.player.getDistance(it) }),
+        DISTANCE({ com.paragon.util.mc.player.getDistance(it) }),
 
         /**
          * Sort by health

@@ -5,6 +5,7 @@ import com.paragon.impl.setting.Setting
 import com.paragon.util.render.ColourUtil.integrateAlpha
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import com.paragon.util.render.builder.BoxRenderMode
 import com.paragon.util.render.builder.RenderBuilder
 import com.paragon.util.system.backgroundThread
@@ -44,7 +45,7 @@ object SourceESP : Module("SourceESP", Category.RENDER, "Highlights liquid sourc
     private var lastJob: Job? = null
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
@@ -60,7 +61,7 @@ object SourceESP : Module("SourceESP", Category.RENDER, "Highlights liquid sourc
                     }
 
                     return@removeIf !it.isSource || it.getDistance(
-                        minecraft.player.posX.toInt(), minecraft.player.posY.toInt(), minecraft.player.posZ.toInt()
+                        mc.player.posX.toInt(), mc.player.posY.toInt(), mc.player.posZ.toInt()
                     ) > range.value
                 }
             }

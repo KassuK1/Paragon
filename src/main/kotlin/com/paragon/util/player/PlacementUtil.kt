@@ -2,7 +2,7 @@ package com.paragon.util.player
 
 import com.paragon.impl.managers.rotation.Rotate
 import com.paragon.impl.managers.rotation.Rotation
-import com.paragon.util.Wrapper
+import com.paragon.util.mc
 import net.minecraft.network.play.client.CPacketEntityAction
 import net.minecraft.network.play.client.CPacketPlayer
 import net.minecraft.util.EnumFacing
@@ -15,7 +15,7 @@ import net.minecraft.util.math.Vec3d
  * @author Surge
  * @since 27/08/2022
  */
-object PlacementUtil : Wrapper {
+object PlacementUtil {
 
     @JvmStatic
     fun place(pos: BlockPos, rotation: Rotation, hand: EnumHand = EnumHand.MAIN_HAND) {
@@ -27,52 +27,52 @@ object PlacementUtil : Wrapper {
                 return@forEach
             }
 
-            val original = Vec2f(minecraft.player.rotationYaw, minecraft.player.rotationPitch)
+            val original = Vec2f(mc.player.rotationYaw, mc.player.rotationPitch)
 
             // Rotate to position
             if (rotation.rotate == Rotate.LEGIT) {
-                minecraft.player.rotationYaw = rotation.yaw
-                minecraft.player.rotationYawHead = rotation.yaw
-                minecraft.player.rotationPitch = rotation.pitch
+                mc.player.rotationYaw = rotation.yaw
+                mc.player.rotationYawHead = rotation.yaw
+                mc.player.rotationPitch = rotation.pitch
             }
 
             if (rotation.rotate != Rotate.NONE) {
-                minecraft.player.connection.sendPacket(
+                mc.player.connection.sendPacket(
                     CPacketPlayer.Rotation(
-                        rotation.yaw, rotation.pitch, minecraft.player.onGround
+                        rotation.yaw, rotation.pitch, mc.player.onGround
                     )
                 )
             }
 
             val vec = Vec3d(offset).add(Vec3d(0.5, 0.5, 0.5))
 
-            minecraft.player.connection.sendPacket(
+            mc.player.connection.sendPacket(
                 CPacketEntityAction(
-                    minecraft.player, CPacketEntityAction.Action.START_SNEAKING
+                    mc.player, CPacketEntityAction.Action.START_SNEAKING
                 )
             )
 
-            minecraft.playerController.processRightClickBlock(
-                minecraft.player, minecraft.world, offset, it.opposite, vec, hand
+            mc.playerController.processRightClickBlock(
+                mc.player, mc.world, offset, it.opposite, vec, hand
             )
 
-            minecraft.player.swingArm(hand)
-            minecraft.player.connection.sendPacket(
+            mc.player.swingArm(hand)
+            mc.player.connection.sendPacket(
                 CPacketEntityAction(
-                    minecraft.player, CPacketEntityAction.Action.STOP_SNEAKING
+                    mc.player, CPacketEntityAction.Action.STOP_SNEAKING
                 )
             )
 
             if (rotation.rotate != Rotate.NONE) {
                 if (rotation.rotate == Rotate.LEGIT) {
-                    minecraft.player.rotationYaw = original.x
-                    minecraft.player.rotationPitch = original.y
-                    minecraft.player.rotationYawHead = original.x
+                    mc.player.rotationYaw = original.x
+                    mc.player.rotationPitch = original.y
+                    mc.player.rotationYawHead = original.x
                 }
 
-                minecraft.player.connection.sendPacket(
+                mc.player.connection.sendPacket(
                     CPacketPlayer.Rotation(
-                        original.x, original.y, minecraft.player.onGround
+                        original.x, original.y, mc.player.onGround
                     )
                 )
             }
@@ -100,38 +100,32 @@ object PlacementUtil : Wrapper {
         val center = Vec3d(this).add(Vec3d(0.5, 0.5, 0.5))
 
         val facing = Vec3d(
-            minecraft.player.getPositionEyes(minecraft.renderPartialTicks).x - center.x, minecraft.player.getPositionEyes(minecraft.renderPartialTicks).y - center.y, minecraft.player.getPositionEyes(minecraft.renderPartialTicks).z - center.z
+            mc.player.getPositionEyes(mc.renderPartialTicks).x - center.x, mc.player.getPositionEyes(mc.renderPartialTicks).y - center.y, mc.player.getPositionEyes(mc.renderPartialTicks).z - center.z
         )
 
         if (facing.x < -0.5) {
             sides.add(EnumFacing.WEST)
-        }
-        else if (facing.x > 0.5) {
+        } else if (facing.x > 0.5) {
             sides.add(EnumFacing.EAST)
-        }
-        else if (!minecraft.world.getBlockState(this).isFullBlock || !minecraft.world.isAirBlock(this)) {
+        } else if (!mc.world.getBlockState(this).isFullBlock || !mc.world.isAirBlock(this)) {
             sides.add(EnumFacing.WEST)
             sides.add(EnumFacing.EAST)
         }
 
         if (facing.y < -0.5) {
             sides.add(EnumFacing.DOWN)
-        }
-        else if (facing.y > 0.5) {
+        } else if (facing.y > 0.5) {
             sides.add(EnumFacing.UP)
-        }
-        else if (!minecraft.world.getBlockState(this).isFullBlock || !minecraft.world.isAirBlock(this)) {
+        } else if (!mc.world.getBlockState(this).isFullBlock || !mc.world.isAirBlock(this)) {
             sides.add(EnumFacing.DOWN)
             sides.add(EnumFacing.UP)
         }
 
         if (facing.z < -0.5) {
             sides.add(EnumFacing.NORTH)
-        }
-        else if (facing.z > 0.5) {
+        } else if (facing.z > 0.5) {
             sides.add(EnumFacing.SOUTH)
-        }
-        else if (!minecraft.world.getBlockState(this).isFullBlock || !minecraft.world.isAirBlock(this)) {
+        } else if (!mc.world.getBlockState(this).isFullBlock || !mc.world.isAirBlock(this)) {
             sides.add(EnumFacing.NORTH)
             sides.add(EnumFacing.SOUTH)
         }

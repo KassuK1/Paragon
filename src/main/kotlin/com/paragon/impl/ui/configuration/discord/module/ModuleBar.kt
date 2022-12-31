@@ -1,17 +1,17 @@
 package com.paragon.impl.ui.configuration.discord.module
 
 import com.paragon.impl.module.Module
-import com.paragon.util.render.font.FontUtil
-import com.paragon.util.render.font.FontUtil.drawStringWithShadow
-import com.paragon.util.render.font.FontUtil.getStringWidth
-import com.paragon.util.render.font.FontUtil.renderCenteredString
-import com.paragon.impl.ui.configuration.discord.GuiDiscord
+import com.paragon.impl.ui.configuration.discord.DiscordGUI
 import com.paragon.impl.ui.configuration.discord.IRenderable
 import com.paragon.impl.ui.configuration.discord.category.CategoryBar
 import com.paragon.impl.ui.configuration.discord.settings.SettingsBar
 import com.paragon.util.mc
 import com.paragon.util.render.RenderUtil
 import com.paragon.util.render.RenderUtil.scaleTo
+import com.paragon.util.render.font.FontUtil
+import com.paragon.util.render.font.FontUtil.drawCenteredString
+import com.paragon.util.render.font.FontUtil.drawStringWithShadow
+import com.paragon.util.render.font.FontUtil.getStringWidth
 import me.surge.animation.Animation
 import me.surge.animation.Easing
 import net.minecraft.client.renderer.GlStateManager
@@ -51,12 +51,12 @@ object ModuleBar : IRenderable {
         //Render the actual modules
         run {
             //Scroll logic
-            if (GuiDiscord.dWheel != 0 && shownModules.isNotEmpty() && rect.contains(mouseX, mouseY)) {
+            if (DiscordGUI.dWheel != 0 && shownModules.isNotEmpty() && rect.contains(mouseX, mouseY)) {
                 val lastRect = shownModules[shownModules.size - 1].rect
 
                 val maxOffset = min(((((lastRect.y + lastRect.height) - shownModules[0].rect.y) - rect.height) * -1), 0)
-                val newScrollOffset = scrollOffset + (GuiDiscord.dWheel / 13)
-                if (GuiDiscord.dWheel < 0) {
+                val newScrollOffset = scrollOffset + (DiscordGUI.dWheel / 13)
+                if (DiscordGUI.dWheel < 0) {
                     scrollOffset = if (newScrollOffset < maxOffset) maxOffset else newScrollOffset
                 }
                 else if (scrollOffset < 0) {
@@ -71,14 +71,14 @@ object ModuleBar : IRenderable {
             }
 
             RenderUtil.drawRect(
-                rect.x.toFloat(), rect.y.toFloat(), rect.width.toFloat(), rect.height.toFloat(), GuiDiscord.channelBarBackground.rgb
+                rect.x.toFloat(), rect.y.toFloat(), rect.width.toFloat(), rect.height.toFloat(), DiscordGUI.channelBarBackground
             )
 
             RenderUtil.pushScissor(
-                rect.x.toDouble(),
-                rect.y + 1.0,
-                rect.width.toDouble(),
-                rect.height.toDouble(),
+                rect.x.toFloat(),
+                rect.y + 1f,
+                rect.width.toFloat(),
+                rect.height.toFloat(),
             )
 
             shownModules.forEach {
@@ -91,7 +91,7 @@ object ModuleBar : IRenderable {
         //Render the user info
         run {
             RenderUtil.drawRect(
-                userRect.x.toFloat(), userRect.y.toFloat(), userRect.width.toFloat(), userRect.height.toFloat(), GuiDiscord.userFieldBackground.rgb
+                userRect.x.toFloat(), userRect.y.toFloat(), userRect.width.toFloat(), userRect.height.toFloat(), DiscordGUI.userFieldBackground
             )
             renderHead(userRect.x + 3, userRect.y + 2, 20)
 
@@ -100,21 +100,20 @@ object ModuleBar : IRenderable {
             }
 
             RenderUtil.pushScissor(
-                userRect.x + 30.0, userRect.y.toDouble(), userRect.width - 30.0, userRect.height.toDouble()
+                userRect.x + 30f, userRect.y.toFloat(), userRect.width - 30f, userRect.height.toFloat()
             )
             drawStringWithShadow(
-                mc.player.name, (((userRect.x + 30F) - ((getStringWidth(mc.player.name) - (userRect.width - 30F)) * nameAnimation.getAnimationFactor())).toFloat()), (userRect.y + (userRect.height / 2F)) - (FontUtil.getHeight() / 2), Color.WHITE.rgb
+                mc.player.name, (((userRect.x + 30F) - ((getStringWidth(mc.player.name) - (userRect.width - 30F)) * nameAnimation.getAnimationFactor())).toFloat()), (userRect.y + (userRect.height / 2F)) - (FontUtil.getHeight() / 2), Color.WHITE
             )
             RenderUtil.popScissor()
 
-            //Render the "copied" thing after the name was copied
+            // Render the "copied" thing after the name was copied
             if (lastCopyTime != 0L) {
                 RenderUtil.drawRoundedRect(
-                    (userRect.x + ((userRect.width - getStringWidth("Copied!")) / 2.0)) - 2.0, (userRect.y - (FontUtil.getHeight() / 2.0)) - 1.5, getStringWidth("Copied!") + 4.0, FontUtil.getHeight() + 3.0, 5.0, 5.0, 5.0, 5.0, GuiDiscord.userCopiedColor.rgb
+                    (userRect.x + ((userRect.width - getStringWidth("Copied!")) / 2f)) - 5f, (userRect.y - (FontUtil.getHeight() / 2f)) - 1.5f, getStringWidth("Copied!") + 10f, FontUtil.getHeight() + 5f, 2f, DiscordGUI.userCopiedColor
                 )
-                renderCenteredString(
-                    "Copied!", (userRect.x + (userRect.width / 2)).toFloat(), userRect.y.toFloat(), Color.WHITE.rgb, true
-                )
+
+                drawCenteredString("Copied!", (userRect.x + (userRect.width / 2)).toFloat(), userRect.y.toFloat() - 3f, Color.WHITE)
 
                 if (System.currentTimeMillis() - 1500L > lastCopyTime) {
                     lastCopyTime = 0L

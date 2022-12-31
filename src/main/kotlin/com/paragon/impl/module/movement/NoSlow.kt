@@ -8,6 +8,7 @@ import com.paragon.impl.setting.Setting
 import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.CPacketClickWindow
 import net.minecraft.network.play.client.CPacketEntityAction
@@ -31,23 +32,23 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, "Stop certain blocks and act
 
     override fun onDisable() {
         super.onDisable()
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        if (sneakState && !minecraft.player.isSneaking) {
-            minecraft.player.connection.sendPacket(
+        if (sneakState && !mc.player.isSneaking) {
+            mc.player.connection.sendPacket(
                 CPacketEntityAction(
-                    minecraft.player, CPacketEntityAction.Action.STOP_SNEAKING
+                    mc.player, CPacketEntityAction.Action.STOP_SNEAKING
                 )
             )
             sneakState = false
         }
 
-        if (sprintState && minecraft.player.isSprinting) {
-            minecraft.player.connection.sendPacket(
+        if (sprintState && mc.player.isSprinting) {
+            mc.player.connection.sendPacket(
                 CPacketEntityAction(
-                    minecraft.player, CPacketEntityAction.Action.START_SPRINTING
+                    mc.player, CPacketEntityAction.Action.START_SPRINTING
                 )
             )
             sprintState = false
@@ -56,17 +57,17 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, "Stop certain blocks and act
 
     @SubscribeEvent
     fun onInput(event: InputUpdateEvent?) {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        if (items.value && minecraft.player.isHandActive && !minecraft.player.isRiding) {
-            minecraft.player.movementInput.moveForward *= 5
-            minecraft.player.movementInput.moveStrafe *= 5
+        if (items.value && mc.player.isHandActive && !mc.player.isRiding) {
+            mc.player.movementInput.moveForward *= 5
+            mc.player.movementInput.moveStrafe *= 5
 
             if (ncpStrict.value) {
                 // funny NCP bypass - good job ncp devs
-                minecraft.player.connection.sendPacket(CPacketHeldItemChange(minecraft.player.inventory.currentItem))
+                mc.player.connection.sendPacket(CPacketHeldItemChange(mc.player.inventory.currentItem))
             }
         }
     }
@@ -83,20 +84,20 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, "Stop certain blocks and act
         if (event.packet is CPacketClickWindow && ncpStrict.value) {
 
             // i love ncp updated devs - the inventory checks are almost as good as verus's
-            if (!minecraft.player.isSneaking) {
+            if (!mc.player.isSneaking) {
                 sneakState = true
-                minecraft.player.connection.sendPacket(
+                mc.player.connection.sendPacket(
                     CPacketEntityAction(
-                        minecraft.player, CPacketEntityAction.Action.START_SNEAKING
+                        mc.player, CPacketEntityAction.Action.START_SNEAKING
                     )
                 )
             }
 
-            if (minecraft.player.isSprinting) {
+            if (mc.player.isSprinting) {
                 sprintState = true
-                minecraft.player.connection.sendPacket(
+                mc.player.connection.sendPacket(
                     CPacketEntityAction(
-                        minecraft.player, CPacketEntityAction.Action.STOP_SPRINTING
+                        mc.player, CPacketEntityAction.Action.STOP_SPRINTING
                     )
                 )
             }
@@ -108,19 +109,19 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, "Stop certain blocks and act
         if (event.packet is CPacketClickWindow && ncpStrict.value) {
 
             // reset states
-            if (sneakState && !minecraft.player.isSneaking) {
-                minecraft.player.connection.sendPacket(
+            if (sneakState && !mc.player.isSneaking) {
+                mc.player.connection.sendPacket(
                     CPacketEntityAction(
-                        minecraft.player, CPacketEntityAction.Action.STOP_SNEAKING
+                        mc.player, CPacketEntityAction.Action.STOP_SNEAKING
                     )
                 )
                 sneakState = false
             }
 
-            if (sprintState && minecraft.player.isSprinting) {
-                minecraft.player.connection.sendPacket(
+            if (sprintState && mc.player.isSprinting) {
+                mc.player.connection.sendPacket(
                     CPacketEntityAction(
-                        minecraft.player, CPacketEntityAction.Action.START_SPRINTING
+                        mc.player, CPacketEntityAction.Action.START_SPRINTING
                     )
                 )
                 sprintState = false

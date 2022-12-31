@@ -1,27 +1,28 @@
 package com.paragon.impl.command.impl
 
 import com.paragon.Paragon
-import net.minecraft.util.text.TextFormatting
+import com.paragon.impl.command.Command
+import com.paragon.impl.command.syntax.ArgumentData
+import com.paragon.impl.command.syntax.SyntaxBuilder
 
 /**
  * @author Surge
  */
-object SyntaxCommand : com.paragon.impl.command.Command("Syntax", "syntax [command]") {
+object SyntaxCommand : Command("Syntax", SyntaxBuilder.createBuilder(arrayListOf(
+    ArgumentData("command", arrayOf("any_str"))
+))) {
 
-    override fun whenCalled(args: Array<String>, fromConsole: Boolean) {
+    override fun call(args: Array<String>, fromConsole: Boolean): Boolean {
         if (args.size == 1) {
             for (command in Paragon.INSTANCE.commandManager.commands) {
                 if (command.name.equals(args[0], true)) {
-                    Paragon.INSTANCE.commandManager.sendClientMessage(command.syntax, fromConsole)
-                    break
+                    sendMessage("${command.name} ${command.syntax.join()}")
+                    return true
                 }
             }
         }
-        else {
-            Paragon.INSTANCE.commandManager.sendClientMessage(
-                TextFormatting.RED.toString() + "Invalid syntax!", fromConsole
-            )
-        }
+
+        return false
     }
 
 }

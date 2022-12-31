@@ -26,20 +26,17 @@ public class MixinItemRenderer {
 
     @Inject(method = "transformFirstPerson", at = @At("HEAD"))
     public void headHookTransformFirstPerson(EnumHandSide hand, float p_187453_2_, CallbackInfo ci) {
-        RenderItemEvent.Pre renderItemEvent = new RenderItemEvent.Pre(hand);
-        Paragon.INSTANCE.getEventBus().post(renderItemEvent);
+        Paragon.INSTANCE.getEventBus().post(new RenderItemEvent.Pre(hand));
     }
 
     @Inject(method = "transformFirstPerson", at = @At("TAIL"))
     public void tailHookTransformFirstPerson(EnumHandSide hand, float p_187453_2_, CallbackInfo ci) {
-        RenderItemEvent.Post renderItemEvent = new RenderItemEvent.Post(hand);
-        Paragon.INSTANCE.getEventBus().post(renderItemEvent);
+        Paragon.INSTANCE.getEventBus().post(new RenderItemEvent.Post(hand));
     }
 
     @Inject(method = "transformSideFirstPerson", at = @At("HEAD"))
     public void hookTransformSideFirstPerson(EnumHandSide hand, float p_187453_2_, CallbackInfo ci) {
-        RenderItemEvent.Pre renderItemEvent = new RenderItemEvent.Pre(hand);
-        Paragon.INSTANCE.getEventBus().post(renderItemEvent);
+        Paragon.INSTANCE.getEventBus().post(new RenderItemEvent.Pre(hand));
     }
 
 }

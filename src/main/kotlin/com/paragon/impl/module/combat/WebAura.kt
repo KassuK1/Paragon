@@ -9,6 +9,7 @@ import com.paragon.impl.managers.rotation.RotationPriority
 import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IEntity
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import com.paragon.util.player.InventoryUtil
 import com.paragon.util.player.PlacementUtil
 import com.paragon.util.player.RotationUtil
@@ -48,13 +49,13 @@ object WebAura : Module("WebAura", Category.COMBAT, "Spiderman on drugs wtf") {
     private val itemCobweb = Item.getItemFromBlock(Blocks.WEB)
 
     override fun onTick() {
-        if (minecraft.anyNull || InventoryUtil.getItemInHotbar(itemCobweb) == -1) {
+        if (mc.anyNull || InventoryUtil.getItemInHotbar(itemCobweb) == -1) {
             return
         }
 
         when (mode.value) {
             TargetMode.SELF -> {
-                val playerBlock = BlockPos(minecraft.player.posX, minecraft.player.posY, minecraft.player.posZ)
+                val playerBlock = BlockPos(mc.player.posX, mc.player.posY, mc.player.posZ)
                 if ((onlyHole.value && !BlockUtil.isHole(playerBlock)) || playerBlock.getBlockAtPos() != Blocks.AIR) {
                     return
                 }
@@ -67,8 +68,8 @@ object WebAura : Module("WebAura", Category.COMBAT, "Spiderman on drugs wtf") {
             }
 
             TargetMode.OTHERS -> {
-                val possibleTargets = minecraft.world.loadedEntityList.filter {
-                    !it.isDead && it != minecraft.player && it is EntityPlayer && !(it as IEntity).hookIsInWeb()
+                val possibleTargets = mc.world.loadedEntityList.filter {
+                    !it.isDead && it != mc.player && it is EntityPlayer && !(it as IEntity).hookIsInWeb()
                 }.mapNotNull {
                     val blockUnder = PlayerUtil.getBlockUnder(it)
                     return@mapNotNull if (blockUnder == null || blockUnder.distanceToEyes > range.value) {
@@ -86,10 +87,10 @@ object WebAura : Module("WebAura", Category.COMBAT, "Spiderman on drugs wtf") {
                 val placePos = possibleTargets.minWith(Comparator.comparingDouble { it.distanceToEyes })
 
                 RotationUtil.rotate(RotationUtil.getRotationToBlockPos(placePos, 0.5), rotationMode.value)
-                minecraft.playerController.processRightClickBlock(
-                    minecraft.player, minecraft.world, placePos, EnumFacing.UP, Vec3d(0.5, 0.5, 0.5), getWebHand()
+                mc.playerController.processRightClickBlock(
+                    mc.player, mc.world, placePos, EnumFacing.UP, Vec3d(0.5, 0.5, 0.5), getWebHand()
                 )
-                minecraft.player.swingArm(EnumHand.MAIN_HAND)
+                mc.player.swingArm(EnumHand.MAIN_HAND)
                 switchBack()
             }
         }
@@ -98,19 +99,19 @@ object WebAura : Module("WebAura", Category.COMBAT, "Spiderman on drugs wtf") {
     private var previousSlot = 0
 
     private fun getWebHand(): EnumHand { //Who puts  webs in their offhand cmon
-        previousSlot = minecraft.player.inventory.currentItem
-        minecraft.player.inventory.currentItem = InventoryUtil.getItemInHotbar(itemCobweb)
+        previousSlot = mc.player.inventory.currentItem
+        mc.player.inventory.currentItem = InventoryUtil.getItemInHotbar(itemCobweb)
         if (packetOnItemChange.value) {
-            minecraft.connection?.sendPacket(CPacketHeldItemChange(minecraft.player.inventory.currentItem))
+            mc.connection?.sendPacket(CPacketHeldItemChange(mc.player.inventory.currentItem))
         }
 
         return EnumHand.MAIN_HAND
     }
 
     private fun switchBack() {
-        minecraft.player.inventory.currentItem = previousSlot
+        mc.player.inventory.currentItem = previousSlot
         if (packetOnItemChange.value) {
-            minecraft.connection?.sendPacket(CPacketHeldItemChange(previousSlot))
+            mc.connection?.sendPacket(CPacketHeldItemChange(previousSlot))
         }
     }
 

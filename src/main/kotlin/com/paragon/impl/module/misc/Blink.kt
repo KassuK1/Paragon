@@ -7,6 +7,7 @@ import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
 import com.paragon.util.calculations.Timer
+import com.paragon.util.mc
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.play.client.CPacketPlayer
 import net.minecraft.util.math.BlockPos
@@ -44,37 +45,37 @@ object Blink : Module("Blink", Category.MISC, "Cancels sending packets for a len
     private var lastPosition: BlockPos? = null
 
     override fun onEnable() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        val fakePlayer = EntityOtherPlayerMP(minecraft.world, minecraft.player.gameProfile)
-        fakePlayer.copyLocationAndAnglesFrom(minecraft.player)
-        fakePlayer.rotationYawHead = minecraft.player.rotationYawHead
-        fakePlayer.inventory.copyInventory(minecraft.player.inventory)
-        fakePlayer.isSneaking = minecraft.player.isSneaking
-        fakePlayer.primaryHand = minecraft.player.primaryHand
-        minecraft.world.addEntityToWorld(-351352, fakePlayer)
-        lastPosition = minecraft.player.position
+        val fakePlayer = EntityOtherPlayerMP(mc.world, mc.player.gameProfile)
+        fakePlayer.copyLocationAndAnglesFrom(mc.player)
+        fakePlayer.rotationYawHead = mc.player.rotationYawHead
+        fakePlayer.inventory.copyInventory(mc.player.inventory)
+        fakePlayer.isSneaking = mc.player.isSneaking
+        fakePlayer.primaryHand = mc.player.primaryHand
+        mc.world.addEntityToWorld(-351352, fakePlayer)
+        lastPosition = mc.player.position
     }
 
     override fun onDisable() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         sendPackets()
-        minecraft.world.removeEntityFromWorld(-351352)
+        mc.world.removeEntityFromWorld(-351352)
         lastPosition = null
     }
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         if (lastPosition == null) {
-            lastPosition = minecraft.player.position
+            lastPosition = mc.player.position
         }
 
         when (mode.value) {
@@ -85,7 +86,7 @@ object Blink : Module("Blink", Category.MISC, "Cancels sending packets for a len
                 timer.reset()
             }
 
-            Mode.DISTANCE -> if (minecraft.player.getDistance(
+            Mode.DISTANCE -> if (mc.player.getDistance(
                     (lastPosition ?: return).x.toDouble(), (lastPosition ?: return).y.toDouble(), (lastPosition ?: return).z.toDouble()
                 ) >= distance.value
             ) {
@@ -98,7 +99,7 @@ object Blink : Module("Blink", Category.MISC, "Cancels sending packets for a len
 
     @Listener
     fun onPacketSent(event: PreSend) {
-        if (minecraft.anyNull || event.packet !is CPacketPlayer) {
+        if (mc.anyNull || event.packet !is CPacketPlayer) {
             return
         }
 
@@ -107,21 +108,21 @@ object Blink : Module("Blink", Category.MISC, "Cancels sending packets for a len
     }
 
     private fun sendPackets() {
-        lastPosition = minecraft.player.position
-        minecraft.world.removeEntityFromWorld(-351352)
+        lastPosition = mc.player.position
+        mc.world.removeEntityFromWorld(-351352)
 
         if (packetQueue.isNotEmpty()) {
-            packetQueue.forEach { minecraft.player.connection.sendPacket(it) }
+            packetQueue.forEach { mc.player.connection.sendPacket(it) }
             packetQueue.clear()
         }
 
-        val fakePlayer = EntityOtherPlayerMP(minecraft.world, minecraft.player.gameProfile)
-        fakePlayer.copyLocationAndAnglesFrom(minecraft.player)
-        fakePlayer.rotationYawHead = minecraft.player.rotationYawHead
-        fakePlayer.inventory.copyInventory(minecraft.player.inventory)
-        fakePlayer.isSneaking = minecraft.player.isSneaking
-        fakePlayer.primaryHand = minecraft.player.primaryHand
-        minecraft.world.addEntityToWorld(-351352, fakePlayer)
+        val fakePlayer = EntityOtherPlayerMP(mc.world, mc.player.gameProfile)
+        fakePlayer.copyLocationAndAnglesFrom(mc.player)
+        fakePlayer.rotationYawHead = mc.player.rotationYawHead
+        fakePlayer.inventory.copyInventory(mc.player.inventory)
+        fakePlayer.isSneaking = mc.player.isSneaking
+        fakePlayer.primaryHand = mc.player.primaryHand
+        mc.world.addEntityToWorld(-351352, fakePlayer)
     }
 
     @Suppress("UNUSED")

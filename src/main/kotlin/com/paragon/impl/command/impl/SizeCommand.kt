@@ -1,9 +1,7 @@
 package com.paragon.impl.command.impl
 
-import com.paragon.Paragon
-import com.paragon.impl.managers.notifications.Notification
-import com.paragon.impl.managers.notifications.NotificationType
-import com.paragon.impl.module.hud.impl.Notifications
+import com.paragon.impl.command.Command
+import com.paragon.impl.command.syntax.SyntaxBuilder
 import io.netty.buffer.Unpooled
 import net.minecraft.client.Minecraft
 import net.minecraft.item.ItemStack
@@ -12,25 +10,13 @@ import net.minecraft.network.PacketBuffer
 /**
  * @author EBS
  */
-object SizeCommand : com.paragon.impl.command.Command("Size", "size") {
+object SizeCommand : Command("Size", SyntaxBuilder()) {
 
-    override fun whenCalled(args: Array<String>, fromConsole: Boolean) {
+    override fun call(args: Array<String>, fromConsole: Boolean): Boolean {
         val stack = Minecraft.getMinecraft().player.heldItemMainhand
 
-        if (Notifications.isEnabled) {
-            Paragon.INSTANCE.notificationManager.addNotification(
-                Notification(
-                    if (stack.isEmpty) "You are not holding any item"
-                    else "Item weights " + getItemSize(stack).toString() + " bytes", NotificationType.INFO
-                )
-            )
-        }
-        else {
-            Paragon.INSTANCE.commandManager.sendClientMessage(
-                if (stack.isEmpty) "You are not holding any item"
-                else "Item weights " + getItemSize(stack).toString() + " bytes", false
-            )
-        }
+        sendMessage(if (stack.isEmpty) "You are not holding any item" else "Item weighs " + getItemSize(stack).toString() + " bytes")
+        return true
     }
 
     private fun getItemSize(stack: ItemStack): Int {

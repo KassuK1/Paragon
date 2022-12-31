@@ -1,5 +1,6 @@
 package com.paragon.util.render.shader.shaders
 
+import com.paragon.util.mc
 import com.paragon.util.render.shader.Shader
 import org.lwjgl.opengl.GL20.*
 import java.awt.Color
@@ -38,7 +39,7 @@ class OutlineShader : Shader("/assets/paragon/glsl/shaders/outline.frag") {
 
     override fun updateUniforms() {
         glUniform1i(getUniform("texture"), 0)
-        glUniform2f(getUniform("resolution"), 1f / minecraft.displayWidth, 1f / minecraft.displayHeight)
+        glUniform2f(getUniform("resolution"), 1f / mc.displayWidth, 1f / mc.displayHeight)
         glUniform4f(getUniform("colour"), colour.red / 255f, colour.green / 255f, colour.blue / 255f, colour.alpha / 255f)
         glUniform1f(getUniform("width"), width)
         glUniform1i(getUniform("fill"), fill)

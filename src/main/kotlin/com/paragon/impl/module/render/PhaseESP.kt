@@ -5,6 +5,7 @@ import com.paragon.impl.setting.Setting
 import com.paragon.util.render.ColourUtil.integrateAlpha
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import com.paragon.util.render.builder.BoxRenderMode
 import com.paragon.util.render.builder.RenderBuilder
 import com.paragon.util.system.backgroundThread
@@ -40,23 +41,23 @@ object PhaseESP : Module("PhaseESP", Category.RENDER, "Highlights phased players
     private var lastJob: Job? = null
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         backgroundThread {
             if (lastJob == null || (lastJob ?: return@backgroundThread).isCompleted) {
                 lastJob = launch {
-                    phased.addAll(minecraft.world.playerEntities.filter {
-                        if (it.uniqueID == minecraft.player.uniqueID && !self.value) {
+                    phased.addAll(mc.world.playerEntities.filter {
+                        if (it.uniqueID == mc.player.uniqueID && !self.value) {
                             return@filter false
                         }
 
-                        !phased.contains(it) && BlockPos(it.posX, it.posY, it.posZ).getBlockAtPos() != Blocks.AIR && it.getDistance(minecraft.player) <= range.value
+                        !phased.contains(it) && BlockPos(it.posX, it.posY, it.posZ).getBlockAtPos() != Blocks.AIR && it.getDistance(mc.player) <= range.value
                     })
 
                     phased.removeIf {
-                        it.getDistance(minecraft.player) > range.value || BlockPos(it.posX, it.posY, it.posZ).getBlockAtPos() == Blocks.AIR || it.uniqueID == minecraft.player.uniqueID && !self.value
+                        it.getDistance(mc.player) > range.value || BlockPos(it.posX, it.posY, it.posZ).getBlockAtPos() == Blocks.AIR || it.uniqueID == mc.player.uniqueID && !self.value
                     }
                 }
             }

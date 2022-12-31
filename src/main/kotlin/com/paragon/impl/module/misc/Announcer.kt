@@ -8,6 +8,7 @@ import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
 import com.paragon.util.calculations.Timer
+import com.paragon.util.mc
 import net.minecraftforge.event.world.BlockEvent.BreakEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 
@@ -40,12 +41,12 @@ object Announcer : Module("Announcer", Category.MISC, "Announces events to the c
     private var announceComponents = arrayOf("", "0", "")
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         if (timer.hasMSPassed(chatTimer.value * 1000) && announceComponents[0] != "" && announceComponents[2] != "") {
-            minecraft.player.sendChatMessage(announceComponents[0] + announceComponents[1] + announceComponents[2])
+            mc.player.sendChatMessage(announceComponents[0] + announceComponents[1] + announceComponents[2])
             announceComponents = arrayOf("", "0", "")
             timer.reset()
         }
@@ -65,15 +66,15 @@ object Announcer : Module("Announcer", Category.MISC, "Announces events to the c
 
     @Listener
     fun onPlayerJoin(event: PlayerJoinEvent) {
-        if (playerJoin.value && event.name != minecraft.player.name) {
-            minecraft.player.sendChatMessage("Welcome to the server, " + event.name + "!")
+        if (playerJoin.value && event.name != mc.player.name) {
+            mc.player.sendChatMessage("Welcome to the server, " + event.name + "!")
         }
     }
 
     @Listener
     fun onPlayerLeave(event: PlayerLeaveEvent) {
-        if (playerLeave.value && event.name != minecraft.player.name) {
-            minecraft.player.sendChatMessage("See you later, " + event.name + "!")
+        if (playerLeave.value && event.name != mc.player.name) {
+            mc.player.sendChatMessage("See you later, " + event.name + "!")
         }
     }
 

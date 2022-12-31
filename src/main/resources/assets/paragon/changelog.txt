@@ -1,6 +1,80 @@
 Changelog for 1.1.0
 
-Added Plugin System
-Added command to save maps ($saveMap)
-Added command to change skin client sided ($copySkin)
-Added AntiGhast
+Modules added:
+  - AntiGhast module
+  - LogoutSpots module
+  - MainMenu module
+  - SuperheroFX module
+  - EnchantColour module
+  - Blur module
+  - NewChunks module
+  - UnfocusedCPU module
+  - AutoSable module
+  - BetterScreenshot module
+  - NoHandshake module
+  - TickShift module
+  - SafeWalk module
+  - AutoXP module
+  - MultiTask module
+  - PacketFlight module
+
+HUD modules added:
+  - LagNotifier
+  - TPS
+  - CPS
+  - Packets
+  - ServerBrand
+  - BindList
+  - Biome
+  - Hunger
+  - IP
+  - Memory
+  - ModelView
+  - Arrows
+
+Commands added:
+  - SaveMap command
+  - CopySkin command
+  - Setting command
+
+Settings added:
+  - ViewModel -> IgnoreActive
+  - ClickGUI & ArrayList -> More Easings
+  - Criticals -> Packet, UpdatedNCP, and Minis modes
+  - ChatModifications -> Infinite
+  - Timer -> Movement
+  - NoRender -> Particles
+  - Armour -> Durability
+
+Other additions:
+  - Command Syntax Preview
+  - CamperCheat (RusherHack) Styled GUI
+  - Panel in HUD Editor
+  - Hub Panel in GUIs
+  - Console window
+  - Snake window
+
+Removed:
+  - Taskbar
+  - Console
+  - CombatInfo
+
+Reworked:
+  - Main Menu
+  - Default ClickGUI
+  - ArrayList module
+  - HoleESP module
+  - AutoCrystal module
+  - Offhand module
+
+Changed:
+  - Updated the style of the ShulkerViewer module
+  - Merged the Notifier module and DonkeyAlert module into the Alert module
+  - Changed the AutoWalk module's category to Movement
+  - Updated Nametags
+  - The style of most HUD modules
+  - Renamed HUDEditor to Editor and moved to Client category
+
+Bug Fixes:
+  - Fixed unicode character error in ShulkerViewer
+  - Font changing Y position depending on ClientFont's enabled state

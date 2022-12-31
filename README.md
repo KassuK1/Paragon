@@ -8,7 +8,7 @@
 
 A 1.12.2 Anarchy Client. Still in development.
 Download the client from the latest
-commit [here](https://nightly.link/Wolfsurge/Paragon/workflows/build/master/Package.zip)
+commit [here](https://nightly.link/Wolfsurge/Paragon/workflows/build/master/Paragon-Build.zip)
 
 # FAQ
 
@@ -16,6 +16,12 @@ commit [here](https://nightly.link/Wolfsurge/Paragon/workflows/build/master/Pack
   <summary> How do I open the ClickGUI? </summary>
 
 > The default ClickGUI bind is `RSHIFT`
+</details>
+
+<details>
+  <summary> What does the GUI look like? </summary>
+  
+  ![image](https://user-images.githubusercontent.com/73380591/201485882-ae80c44d-8035-40de-985f-2de214630e35.png)
 </details>
 
 <details>
@@ -27,7 +33,7 @@ commit [here](https://nightly.link/Wolfsurge/Paragon/workflows/build/master/Pack
 <details>
   <summary> How do I request help, or suggest a feature? </summary>
 
-> You can join the discord server (linked above) and use the appropriate channels
+> You can join the discord server (click on the badge with the online members in the discord) and use the appropriate channels
 </details>
 
 # Contributors
@@ -43,7 +49,8 @@ Bush <br>
 Master7720 <br>
 Chanakan55991 <br>
 Swp <br>
-Xello12121
+Xello12121 <br>
+Cart69420
 
 ## Other Credits
 

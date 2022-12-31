@@ -4,17 +4,17 @@ import com.paragon.bus.EventBus
 import com.paragon.impl.event.EventFactory
 import com.paragon.impl.managers.*
 import com.paragon.impl.ui.configuration.ConfigurationGUI
-import com.paragon.impl.ui.configuration.GuiImplementation
+import com.paragon.impl.ui.configuration.camper.CamperCheatGUI
+import com.paragon.impl.ui.configuration.discord.DiscordGUI
+import com.paragon.impl.ui.configuration.panel.PanelGUI
+import com.paragon.impl.ui.configuration.phobos.PhobosGUI
 import com.paragon.impl.ui.configuration.retrowindows.Windows98
-import com.paragon.impl.ui.console.Console
-import com.paragon.impl.ui.taskbar.Taskbar
 import com.paragon.util.render.font.FontUtil
 import net.minecraft.client.Minecraft
 import net.minecraftforge.common.ForgeVersion
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.Mod.EventHandler
 import net.minecraftforge.fml.common.event.FMLInitializationEvent
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -23,7 +23,7 @@ import java.awt.Desktop
 import java.net.URI
 import javax.swing.JOptionPane
 
-@Mod(name = com.paragon.Paragon.Companion.modName, modid = com.paragon.Paragon.Companion.modID, version = com.paragon.Paragon.Companion.modVersion)
+@Mod(name = Paragon.NAME, modid = Paragon.MOD_ID, version = Paragon.VERSION)
 class Paragon {
 
     @EventHandler
@@ -51,36 +51,18 @@ class Paragon {
 
     @EventHandler
     fun init(event: FMLInitializationEvent?) {
-        logger.info("Starting Paragon ${modVersion} initialisation")
-
-        //  ________  ________  ________  ________  ________  ________  ________            _____      ________      ________
-        // |\   __  \|\   __  \|\   __  \|\   __  \|\   ____\|\   __  \|\   ___  \         / __  \    |\   __  \    |\   __  \
-        // \ \  \|\  \ \  \|\  \ \  \|\  \ \  \|\  \ \  \___|\ \  \|\  \ \  \\ \  \       |\/_|\  \   \ \  \|\  \   \ \  \|\  \
-        //  \ \   ____\ \   __  \ \   _  _\ \   __  \ \  \  __\ \  \\\  \ \  \\ \  \      \|/ \ \  \   \ \  \\\  \   \ \  \\\  \
-        //   \ \  \___|\ \  \ \  \ \  \\  \\ \  \ \  \ \  \|\  \ \  \\\  \ \  \\ \  \          \ \  \ __\ \  \\\  \ __\ \  \\\  \
-        //    \ \__\    \ \__\ \__\ \__\\ _\\ \__\ \__\ \_______\ \_______\ \__\\ \__\          \ \__\\__\ \_______\\__\ \_______\
-        //     \|__|     \|__|\|__|\|__|\|__|\|__|\|__|\|_______|\|_______|\|__| \|__|           \|__\|__|\|_______\|__|\|_______|
-
-        println(
-            "\n ________  ________  ________  ________  ________  ________  ________            _____      ________      ________     \n" + "|\\   __  \\|\\   __  \\|\\   __  \\|\\   __  \\|\\   ____\\|\\   __  \\|\\   ___  \\         / __  \\    |\\   __  \\    |\\   __  \\    \n" + "\\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\___|\\ \\  \\|\\  \\ \\  \\\\ \\  \\       |\\/_|\\  \\   \\ \\  \\|\\  \\   \\ \\  \\|\\  \\   \n" + " \\ \\   ____\\ \\   __  \\ \\   _  _\\ \\   __  \\ \\  \\  __\\ \\  \\\\\\  \\ \\  \\\\ \\  \\      \\|/ \\ \\  \\   \\ \\  \\\\\\  \\   \\ \\  \\\\\\  \\  \n" + "  \\ \\  \\___|\\ \\  \\ \\  \\ \\  \\\\  \\\\ \\  \\ \\  \\ \\  \\|\\  \\ \\  \\\\\\  \\ \\  \\\\ \\  \\          \\ \\  \\ __\\ \\  \\\\\\  \\ __\\ \\  \\\\\\  \\ \n" + "   \\ \\__\\    \\ \\__\\ \\__\\ \\__\\\\ _\\\\ \\__\\ \\__\\ \\_______\\ \\_______\\ \\__\\\\ \\__\\          \\ \\__\\\\__\\ \\_______\\\\__\\ \\_______\\\n" + "    \\|__|     \\|__|\\|__|\\|__|\\|__|\\|__|\\|__|\\|_______|\\|_______|\\|__| \\|__|           \\|__\\|__|\\|_______\\|__|\\|_______|"
-        )
+        logger.info("Starting Paragon $VERSION initialisation")
 
         storageManager = StorageManager()
         logger.info("StorageManager initialised")
 
-        // Module /  Commands
+        // Module / Commands
 
         moduleManager = ModuleManager()
         logger.info("ModuleManager initialised")
 
         commandManager = CommandManager()
         logger.info("CommandManager initialised")
-
-        pluginManager = PluginManager()
-        logger.info("PluginManager initialised")
-
-        pluginManager.onLoad()
-        logger.info("Plugins loaded")
 
         // Misc client stuff
 
@@ -103,19 +85,9 @@ class Paragon {
         rotationManager = RotationManager()
         logger.info("RotationManager initialised")
 
-        // GUIs
-
-        taskbar = Taskbar
-        logger.info("Taskbar Initialised")
-
-        windows98GUI = Windows98()
-        logger.info("Windows98 GUI Initialised")
-
-        console = Console("Paragon Console", 400f, 300f)
-        logger.info("Console Initialised")
-
-        configurationGUI = ConfigurationGUI()
-        logger.info("Configuration GUI Initialised")
+        tpsManager = TPSManager()
+        lagCompensator = LagCompensator()
+        logger.info("TPS Utilities initialised")
 
         // Load
 
@@ -131,18 +103,33 @@ class Paragon {
         storageManager.loadOther()
         logger.info("Other Loaded")
 
-        logger.info("Paragon ${com.paragon.Paragon.Companion.modVersion} Initialised Successfully")
-    }
+        // GUIs
 
-    @EventHandler
-    fun postInit(event: FMLPostInitializationEvent) {
-        pluginManager.onPostLoad()
+        panelGUI = PanelGUI()
+        logger.info("PanelGUI Initialised")
+
+        windows98GUI = Windows98()
+        logger.info("Windows98 GUI Initialised")
+
+        phobosGUI = PhobosGUI()
+        logger.info("Phobos GUI Initialised")
+
+        discordGUI = DiscordGUI()
+        logger.info("Discord GUI Initialised")
+
+        camperCheatGUI = CamperCheatGUI()
+        logger.info("CamperCheat GUI Initialised")
+
+        configurationGUI = ConfigurationGUI()
+        logger.info("Configuration GUI Initialised")
+
+        logger.info("Paragon $VERSION Initialised Successfully")
     }
 
     companion object {
-        const val modName = "Paragon"
-        const val modID = "paragon"
-        const val modVersion = "1.0.0"
+        const val NAME = "Paragon"
+        const val MOD_ID = "paragon"
+        const val VERSION = "1.1.0"
 
         @JvmField
         @Mod.Instance
@@ -154,8 +141,6 @@ class Paragon {
     // Client stuff
     var logger: Logger = LogManager.getLogger("paragon")
         private set
-
-    var pluginGui: GuiImplementation? = null
 
     val presenceManager = DiscordPresenceManager()
 
@@ -189,26 +174,29 @@ class Paragon {
     lateinit var capeManager: CapeManager
         private set
 
-    lateinit var pluginManager: PluginManager
+    lateinit var tpsManager: TPSManager
+        private set
+
+    lateinit var lagCompensator: LagCompensator
         private set
 
     // GUIs
-    lateinit var taskbar: Taskbar
+    lateinit var panelGUI: PanelGUI
         private set
 
     lateinit var windows98GUI: Windows98
         private set
 
+    lateinit var phobosGUI: PhobosGUI
+        private set
+
+    lateinit var discordGUI: DiscordGUI
+        private set
+
+    lateinit var camperCheatGUI: CamperCheatGUI
+        private set
+
     lateinit var configurationGUI: ConfigurationGUI
         private set
-
-    lateinit var console: Console
-        private set
-
-    var isParagonMainMenu = false
-        set(paragonMainMenu) {
-            field = paragonMainMenu
-            storageManager.saveOther()
-        }
 
 }

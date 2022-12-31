@@ -5,7 +5,8 @@ import java.math.RoundingMode
 import kotlin.math.roundToInt
 
 /**
- * @author Surge, SooStrator1136
+ * @author Surge
+ * @author SooStrator1136
  */
 object MathsUtil {
 
@@ -33,7 +34,7 @@ object MathsUtil {
     fun getPercentOf(percent: Double, total: Double) = total * (percent / 100)
 
     /**
-     * Rounds the given [value] to the closest possible value according to the given [incrementation]
+     * Rounds the given [value] to the closest possible value according to the given [incrementation].
      *
      * @param incrementation Incrementation used
      * @param value The number to round

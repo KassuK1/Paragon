@@ -9,8 +9,6 @@ class AltManager {
 
     val alts = ArrayList<Alt>()
 
-    fun addAlt(alt: Alt) {
-        alts.add(alt)
-    }
+    fun addAlt(alt: Alt) = alts.add(alt)
 
 }

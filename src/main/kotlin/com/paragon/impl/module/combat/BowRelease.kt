@@ -1,9 +1,11 @@
 package com.paragon.impl.module.combat
 
+import com.paragon.impl.module.annotation.Aliases
 import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.CPacketPlayerDigging
 import net.minecraft.network.play.client.CPacketPlayerTryUseItem
@@ -12,6 +14,7 @@ import net.minecraft.util.math.BlockPos
 /**
  * @author Surge
  */
+@Aliases(["AutoBowRelease"])
 object BowRelease : Module("BowRelease", Category.COMBAT, "Automatically releases your bow when at max charge") {
 
     private val release = Setting("Release", Release.TICKS) describedBy "When to release the bow"
@@ -25,18 +28,18 @@ object BowRelease : Module("BowRelease", Category.COMBAT, "Automatically release
     private var ticks = 0
 
     override fun onTick() {
-        if (minecraft.anyNull || minecraft.player.heldItemMainhand.item !== Items.BOW) {
+        if (mc.anyNull || mc.player.heldItemMainhand.item !== Items.BOW) {
             return
         }
 
-        if (!minecraft.player.isHandActive || minecraft.player.itemInUseMaxCount < 3) {
+        if (!mc.player.isHandActive || mc.player.itemInUseMaxCount < 3) {
             return
         }
 
         when (release.value) {
             Release.POWER -> {
                 // Get the charge power (awesome logic from trajectories!)
-                val power: Float = ((72000 - minecraft.player.itemInUseCount) / 20.0f * ((72000 - minecraft.player.itemInUseCount) / 20.0f) + (72000 - minecraft.player.itemInUseCount) / 20.0f * 2.0f) / 3.0f * 3
+                val power: Float = ((72000 - mc.player.itemInUseCount) / 20.0f * ((72000 - mc.player.itemInUseCount) / 20.0f) + (72000 - mc.player.itemInUseCount) / 20.0f * 2.0f) / 3.0f * 3
 
                 // Return if the power is not high enough
                 if (power < releasePower.value) {
@@ -49,13 +52,13 @@ object BowRelease : Module("BowRelease", Category.COMBAT, "Automatically release
 
 
         // Release the bow
-        minecraft.player.connection.sendPacket(
+        mc.player.connection.sendPacket(
             CPacketPlayerDigging(
-                CPacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, minecraft.player.horizontalFacing
+                CPacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, mc.player.horizontalFacing
             )
         )
-        minecraft.player.connection.sendPacket(CPacketPlayerTryUseItem(minecraft.player.activeHand))
-        minecraft.player.stopActiveHand()
+        mc.player.connection.sendPacket(CPacketPlayerTryUseItem(mc.player.activeHand))
+        mc.player.stopActiveHand()
 
         // Set ticks back to 0
         ticks = 0

@@ -1,5 +1,8 @@
 package com.paragon.impl.setting
 
+import com.paragon.Paragon
+import com.paragon.impl.event.client.SettingUpdateEvent
+import com.paragon.impl.module.annotation.Constant
 import com.paragon.impl.module.client.Colours
 import com.paragon.util.render.ColourUtil
 import com.paragon.util.render.ColourUtil.integrateAlpha
@@ -9,16 +12,24 @@ class Setting<T>(val name: String, value: T, val min: T = value, val max: T = va
 
     val subsettings = ArrayList<Setting<*>>()
 
+    private val constant = this.javaClass.isAnnotationPresent(Constant::class.java)
+    private val exclusions = arrayListOf<T>()
+
+    /**
+     * The description of the setting.
+     */
     var description = ""
         private set
 
-    // Value of the setting
+    /**
+     * The current value held by the setting.
+     */
     var value: T = value
         private set
         get() {
             if (field is Color) {
                 if (isSync && this !== Colours.mainColour) {
-                    return Colours.mainColour.value.integrateAlpha(alpha) as T
+                    return Colours.mainColour.value as T
                 }
 
                 if (isRainbow) {
@@ -26,10 +37,10 @@ class Setting<T>(val name: String, value: T, val min: T = value, val max: T = va
                         ColourUtil.getRainbow(
                             rainbowSpeed, rainbowSaturation / 100, 0
                         )
-                    ).integrateAlpha(alpha) as T
+                    ).integrateAlpha((field as Color).alpha.toFloat()) as T
                 }
 
-                return (field as Color).integrateAlpha(alpha) as T
+                return (field as Color) as T
             }
 
             return field
@@ -39,14 +50,9 @@ class Setting<T>(val name: String, value: T, val min: T = value, val max: T = va
     var index = -1
 
     // For colour settings
-    var alpha = 0f
-
     var isRainbow = false
-
     var rainbowSpeed = 4f
-
     var rainbowSaturation = 100f
-
     var isSync = false
 
     // Subsettings
@@ -55,12 +61,6 @@ class Setting<T>(val name: String, value: T, val min: T = value, val max: T = va
 
     // GUI Visibility
     private var isVisible = { true }
-
-    init {
-        if (value is Color) {
-            alpha = (value as Color).alpha.toFloat()
-        }
-    }
 
     /**
      * Sets the description of the setting.
@@ -79,11 +79,23 @@ class Setting<T>(val name: String, value: T, val min: T = value, val max: T = va
      * @param value the value of the setting.
      */
     fun setValue(value: T) {
+        if (constant) {
+            return
+        }
+
+        if (value != this.value) {
+            Paragon.INSTANCE.eventBus.post(SettingUpdateEvent(this))
+        }
+
         if (value is Enum<*>) {
             index = nextIndex
         }
 
         this.value = value
+
+        if (value is Enum<*> && exclusions.contains(value)) {
+            setValue(nextMode)
+        }
     }
 
     /**
@@ -92,6 +104,10 @@ class Setting<T>(val name: String, value: T, val min: T = value, val max: T = va
      * @param value the value of the setting.
      */
     fun setValueRaw(value: T) {
+        if (constant) {
+            return
+        }
+
         this.value = value
     }
 
@@ -125,6 +141,11 @@ class Setting<T>(val name: String, value: T, val min: T = value, val max: T = va
         return this
     }
 
+    private fun addExclusion(exclusion: T): Setting<T> {
+        this.exclusions.add(exclusion)
+        return this
+    }
+
     /**
      * Gets the next mode of the setting.
      *
@@ -133,22 +154,24 @@ class Setting<T>(val name: String, value: T, val min: T = value, val max: T = va
      */
     val nextMode: T
         get() {
-            val enumeration = value as Enum<*>
-            val values = enumeration.javaClass.enumConstants.map { it.name }.toTypedArray()
+            val enum = value as Enum<*>
 
-            return java.lang.Enum.valueOf(enumeration::class.java, values[nextIndex]) as T
+            return java.lang.Enum.valueOf(
+                enum::class.java,
+                enum.javaClass.enumConstants.map { it.name }[nextIndex]
+            ) as T
         }
 
     private val nextIndex: Int
         get() {
-            val enumeration = value as Enum<*>
-            val values = enumeration.javaClass.enumConstants.map { it.name }.toTypedArray()
+            val enum = value as Enum<*>
 
-            return if (index + 1 > values.size - 1) 0 else index + 1
+            return if (index + 1 > enum.javaClass.enumConstants.map { it.name }.size - 1) 0 else index + 1
         }
 
     infix fun describedBy(description: String) = setDescription(description)
     infix fun visibleWhen(isVisible: () -> Boolean) = setVisibility(isVisible)
     infix fun subOf(parent: Setting<*>?) = setParentSetting(parent)
+    infix fun excludes(exclusion: T) = addExclusion(exclusion)
 
 }

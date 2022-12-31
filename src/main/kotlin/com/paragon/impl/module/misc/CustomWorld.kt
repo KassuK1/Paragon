@@ -6,6 +6,7 @@ import com.paragon.impl.setting.Setting
 import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import net.minecraft.network.play.server.SPacketTimeUpdate
 
 object CustomWorld : Module("CustomWorld", Category.MISC, "Changes the way the world is shown client side") {
@@ -27,12 +28,12 @@ object CustomWorld : Module("CustomWorld", Category.MISC, "Changes the way the w
     ) describedBy "The time of day" subOf customTime
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        minecraft.world.setRainStrength(weather.value.rainStrength.toFloat())
-        minecraft.world.worldTime = time.value.toLong()
+        mc.world.setRainStrength(weather.value.rainStrength.toFloat())
+        mc.world.worldTime = time.value.toLong()
     }
 
     @Listener

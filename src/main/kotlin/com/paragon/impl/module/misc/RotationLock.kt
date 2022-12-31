@@ -4,6 +4,7 @@ import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 
 /**
  * @author Surge
@@ -19,13 +20,13 @@ object RotationLock : Module("RotationLock", Category.MISC, "Locks your rotation
     ) describedBy "The pitch to lock to"
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        minecraft.player.rotationYaw = yaw.value
-        minecraft.player.rotationYawHead = yaw.value
-        minecraft.player.rotationPitch = pitch.value
+        mc.player.rotationYaw = yaw.value
+        mc.player.rotationYawHead = yaw.value
+        mc.player.rotationPitch = pitch.value
     }
 
 }

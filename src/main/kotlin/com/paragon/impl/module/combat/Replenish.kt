@@ -1,9 +1,11 @@
 package com.paragon.impl.module.combat
 
-import com.paragon.impl.module.Module
-import com.paragon.impl.setting.Setting
 import com.paragon.impl.module.Category
+import com.paragon.impl.module.Module
+import com.paragon.impl.module.annotation.Aliases
+import com.paragon.impl.setting.Setting
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import net.minecraft.inventory.ClickType
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
@@ -13,6 +15,7 @@ import net.minecraft.network.play.client.CPacketEntityAction
 /**
  * @author Surge
  */
+@Aliases(["HotbarRefill", "Refill"])
 object Replenish : Module("Replenish", Category.COMBAT, "Automatically refills items in your hotbar") {
 
     private val inventorySpoof = Setting(
@@ -24,14 +27,14 @@ object Replenish : Module("Replenish", Category.COMBAT, "Automatically refills i
     ) describedBy "The point at which to refill"
 
     override fun onTick() {
-        if (minecraft.anyNull || minecraft.player.ticksExisted < 20 || minecraft.player.isDead) {
+        if (mc.anyNull || mc.player.ticksExisted < 20 || mc.player.isDead) {
             return
         }
 
         // Loop through hotbar items
         for (i in 0..8) {
             // Get the stack
-            val stack = minecraft.player.inventory.getStackInSlot(i)
+            val stack = mc.player.inventory.getStackInSlot(i)
 
             // If the stack is empty, continue
             if (stack.isEmpty) {
@@ -57,7 +60,7 @@ object Replenish : Module("Replenish", Category.COMBAT, "Automatically refills i
         // Loop through items in inventory
         for (i in 9..35) {
             // Get the stack
-            val inventoryStack = minecraft.player.inventory.getStackInSlot(i)
+            val inventoryStack = mc.player.inventory.getStackInSlot(i)
 
             // If the stack is empty, continue
             if (inventoryStack.isEmpty) {
@@ -89,21 +92,20 @@ object Replenish : Module("Replenish", Category.COMBAT, "Automatically refills i
         }
         if (replaceSlot != -1) {
             if (inventorySpoof.value) {
-                minecraft.player.connection.sendPacket(
+                mc.player.connection.sendPacket(
                     CPacketEntityAction(
-                        minecraft.player, CPacketEntityAction.Action.OPEN_INVENTORY
+                        mc.player, CPacketEntityAction.Action.OPEN_INVENTORY
                     )
                 )
             }
 
             // Merge stacks
-            minecraft.playerController.windowClick(0, replaceSlot, 0, ClickType.PICKUP, minecraft.player)
-            minecraft.playerController.windowClick(
-                0, if (current < 9) current + 36 else current, 0, ClickType.PICKUP, minecraft.player
-            )
-            minecraft.playerController.windowClick(0, replaceSlot, 0, ClickType.PICKUP, minecraft.player)
+            mc.playerController.windowClick(0, replaceSlot, 0, ClickType.PICKUP, mc.player)
+            mc.playerController.windowClick(0, if (current < 9) current + 36 else current, 0, ClickType.PICKUP, mc.player)
+            mc.playerController.windowClick(0, replaceSlot, 0, ClickType.PICKUP, mc.player)
+
             if (inventorySpoof.value) {
-                minecraft.player.connection.sendPacket(CPacketCloseWindow(minecraft.player.inventoryContainer.windowId))
+                mc.player.connection.sendPacket(CPacketCloseWindow(mc.player.inventoryContainer.windowId))
             }
         }
     }

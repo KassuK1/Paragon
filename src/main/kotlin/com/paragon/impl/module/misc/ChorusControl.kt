@@ -5,6 +5,7 @@ import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
+import com.paragon.util.mc
 import com.paragon.util.render.RenderUtil.drawNametagText
 import net.minecraft.item.ItemChorusFruit
 import net.minecraft.network.play.client.CPacketConfirmTeleport
@@ -13,6 +14,7 @@ import net.minecraft.network.play.client.CPacketPlayerTryUseItem
 import net.minecraft.network.play.server.SPacketPlayerPosLook
 import net.minecraft.util.EnumHand
 import net.minecraft.util.math.Vec3d
+import java.awt.Color
 
 /**
  * @author GentlemanMC, SooStrator1136
@@ -31,9 +33,9 @@ object ChorusControl : Module("ChorusControl", Category.MISC, "Cancels packets t
     private var ate = false
 
     override fun onDisable() {
-        if (minecraft.connection != null) {
-            packets.forEach((minecraft.connection ?: return)::sendPacket)
-            teleportPackets.forEach((minecraft.connection ?: return)::sendPacket)
+        if (mc.connection != null) {
+            packets.forEach((mc.connection ?: return)::sendPacket)
+            teleportPackets.forEach((mc.connection ?: return)::sendPacket)
         }
 
         packets.clear()
@@ -46,13 +48,13 @@ object ChorusControl : Module("ChorusControl", Category.MISC, "Cancels packets t
             return
         }
 
-        drawNametagText("Player Chorus", renderPos, -1)
+        drawNametagText("Player Chorus", renderPos, Color.WHITE)
     }
 
     @Listener
     fun onPacketReceive(event: PreReceive) {
         if (event.packet is CPacketPlayerTryUseItem) {
-            if ((if (event.packet.hand == EnumHand.OFF_HAND) minecraft.player.heldItemOffhand else minecraft.player.heldItemMainhand).item is ItemChorusFruit) {
+            if ((if (event.packet.hand == EnumHand.OFF_HAND) mc.player.heldItemOffhand else mc.player.heldItemMainhand).item is ItemChorusFruit) {
                 ate = true
             }
         }

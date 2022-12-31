@@ -6,6 +6,7 @@ import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IPlayerControllerMP
 import com.paragon.util.anyNull
 import com.paragon.util.calculations.Timer
+import com.paragon.util.mc
 import io.netty.buffer.Unpooled
 import net.minecraft.entity.player.InventoryPlayer
 import net.minecraft.item.ItemStack
@@ -42,7 +43,7 @@ object BookBot : Module("BookBot", Category.MISC, "Writes books for you") {
     private val timer = Timer()
 
     override fun onTick() {
-        if (minecraft.anyNull || !timer.hasMSPassed(delay.value)) {
+        if (mc.anyNull || !timer.hasMSPassed(delay.value)) {
             return
         }
 
@@ -51,15 +52,15 @@ object BookBot : Module("BookBot", Category.MISC, "Writes books for you") {
             return
         }
 
-        if (minecraft.player.inventory.currentItem != book.first) {
-            minecraft.player.inventory.currentItem = book.first
-            (minecraft.playerController as IPlayerControllerMP).hookSyncCurrentPlayItem()
+        if (mc.player.inventory.currentItem != book.first) {
+            mc.player.inventory.currentItem = book.first
+            (mc.playerController as IPlayerControllerMP).hookSyncCurrentPlayItem()
         }
 
-        minecraft.player.openBook(book.second, EnumHand.MAIN_HAND)
+        mc.player.openBook(book.second, EnumHand.MAIN_HAND)
 
         sendBook(book.second)
-        minecraft.setIngameFocus()
+        mc.setIngameFocus()
 
         timer.reset()
     }
@@ -81,12 +82,12 @@ object BookBot : Module("BookBot", Category.MISC, "Writes books for you") {
             stack.setTagInfo("pages", pages)
         }
 
-        stack.setTagInfo("author", NBTTagString(minecraft.player.name))
+        stack.setTagInfo("author", NBTTagString(mc.player.name))
         stack.setTagInfo(
             "title", NBTTagString(bookName.value)
         )
 
-        minecraft.connection?.sendPacket(
+        mc.connection?.sendPacket(
             CPacketCustomPayload(
                 "MC|BSign", PacketBuffer(Unpooled.buffer()).writeItemStack(stack)
             )
@@ -111,7 +112,7 @@ object BookBot : Module("BookBot", Category.MISC, "Writes books for you") {
      */
     private fun getBook(): Pair<Int, ItemStack> {
         repeat(InventoryPlayer.getHotbarSize()) {
-            val stack: ItemStack? = minecraft.player.inventory.getStackInSlot(it)
+            val stack: ItemStack? = mc.player.inventory.getStackInSlot(it)
             if (stack != null && stack != ItemStack.EMPTY && stack.item is ItemWritableBook) {
                 return Pair(it, stack)
             }

@@ -7,6 +7,7 @@ import com.paragon.util.render.ColourUtil.integrateAlpha
 import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IEntityRenderer
+import com.paragon.util.mc
 import com.paragon.util.render.OutlineUtil.renderFive
 import com.paragon.util.render.OutlineUtil.renderFour
 import com.paragon.util.render.OutlineUtil.renderOne
@@ -79,7 +80,7 @@ object StorageESP : Module("StorageESP", Category.RENDER, "Highlights storage bl
 
     override fun onRender3D() {
         if (mode.value == Mode.BOX) {
-            minecraft.world.loadedTileEntityList.forEach {
+            mc.world.loadedTileEntityList.forEach {
                 if (isStorageValid(it)) {
                     RenderBuilder().boundingBox(getBlockBox(it.pos)).inner(colour.value).outer(colour.value.integrateAlpha(255f)).type(BoxRenderMode.BOTH)
 
@@ -110,7 +111,7 @@ object StorageESP : Module("StorageESP", Category.RENDER, "Highlights storage bl
 
                 if (lastScaleFactor != event.resolution.scaleFactor.toFloat() || lastScaleWidth != event.resolution.scaledWidth.toFloat() || lastScaleHeight != event.resolution.scaledHeight.toFloat()) {
                     frameBuffer!!.deleteFramebuffer()
-                    frameBuffer = Framebuffer(minecraft.displayWidth, minecraft.displayHeight, true)
+                    frameBuffer = Framebuffer(mc.displayWidth, mc.displayHeight, true)
                     frameBuffer!!.framebufferClear()
                 }
 
@@ -119,31 +120,31 @@ object StorageESP : Module("StorageESP", Category.RENDER, "Highlights storage bl
                 lastScaleHeight = event.resolution.scaledHeight.toFloat()
             }
             else {
-                frameBuffer = Framebuffer(minecraft.displayWidth, minecraft.displayHeight, true)
+                frameBuffer = Framebuffer(mc.displayWidth, mc.displayHeight, true)
             }
 
             frameBuffer!!.bindFramebuffer(false)
-            val previousShadows = minecraft.gameSettings.entityShadows
-            minecraft.gameSettings.entityShadows = false
-            (minecraft.entityRenderer as IEntityRenderer).hookSetupCameraTransform(event.partialTicks, 0)
+            val previousShadows = mc.gameSettings.entityShadows
+            mc.gameSettings.entityShadows = false
+            (mc.entityRenderer as IEntityRenderer).hookSetupCameraTransform(event.partialTicks, 0)
 
-            for (tileEntity in minecraft.world.loadedTileEntityList) {
+            for (tileEntity in mc.world.loadedTileEntityList) {
                 if (isStorageValid(tileEntity)) {
-                    val x = minecraft.renderManager.viewerPosX
-                    val y = minecraft.renderManager.viewerPosY
-                    val z = minecraft.renderManager.viewerPosZ
+                    val x = mc.renderManager.viewerPosX
+                    val y = mc.renderManager.viewerPosY
+                    val z = mc.renderManager.viewerPosZ
                     TileEntityRendererDispatcher.instance.render(
-                        tileEntity, tileEntity.pos.x - x, tileEntity.pos.y - y, tileEntity.pos.z - z, minecraft.renderPartialTicks
+                        tileEntity, tileEntity.pos.x - x, tileEntity.pos.y - y, tileEntity.pos.z - z, mc.renderPartialTicks
                     )
                 }
             }
 
-            minecraft.gameSettings.entityShadows = previousShadows
+            mc.gameSettings.entityShadows = previousShadows
             GlStateManager.enableBlend()
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
             frameBuffer!!.unbindFramebuffer()
-            minecraft.framebuffer.bindFramebuffer(true)
-            minecraft.entityRenderer.disableLightmap()
+            mc.framebuffer.bindFramebuffer(true)
+            mc.entityRenderer.disableLightmap()
             RenderHelper.disableStandardItemLighting()
             GlStateManager.pushMatrix()
 
@@ -153,7 +154,7 @@ object StorageESP : Module("StorageESP", Category.RENDER, "Highlights storage bl
             outlineShader.setFill(if (fill.value) 1 else 0)
             outlineShader.setOutline(if (outline.value) 1 else 0)
             outlineShader.startShader()
-            minecraft.entityRenderer.setupOverlayRendering()
+            mc.entityRenderer.setupOverlayRendering()
 
             glBindTexture(GL_TEXTURE_2D, frameBuffer!!.framebufferTexture)
             glBegin(GL_QUADS)
@@ -171,10 +172,10 @@ object StorageESP : Module("StorageESP", Category.RENDER, "Highlights storage bl
             glUseProgram(0)
             glPopMatrix()
 
-            minecraft.entityRenderer.enableLightmap()
+            mc.entityRenderer.enableLightmap()
             GlStateManager.popMatrix()
             GlStateManager.popAttrib()
-            minecraft.entityRenderer.setupOverlayRendering()
+            mc.entityRenderer.setupOverlayRendering()
         }
     }
 

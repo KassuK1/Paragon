@@ -2,9 +2,11 @@ package com.paragon.util.render.font
 
 import com.paragon.Paragon
 import com.paragon.impl.module.client.ClientFont
-import com.paragon.util.Wrapper
+import com.paragon.util.mc
+import net.minecraft.client.renderer.GlStateManager
 import org.apache.commons.io.FileUtils
 import org.json.JSONObject
+import java.awt.Color
 import java.awt.Font
 import java.io.*
 import java.net.URL
@@ -15,7 +17,7 @@ import kotlin.math.max
  * @author Surge
  * @since 31/07/2022
  */
-object FontUtil : Wrapper {
+object FontUtil {
 
     @JvmStatic
     lateinit var font: FontRenderer
@@ -29,15 +31,45 @@ object FontUtil : Wrapper {
     private var yIncrease = 0F
 
     fun init() {
+        Paragon.INSTANCE.logger.info("Initialising fonts")
+
         font = FontRenderer(getFont("font"))
-        fontLarge = FontRenderer(getFont(FileInputStream("paragon/font/font.ttf"), 80f))
+        fontLarge = FontRenderer(getFont("font", 120f))
+
         icons = FontRenderer(Font.createFont(0, javaClass.getResourceAsStream("/assets/paragon/font/icons.ttf")).deriveFont(Font.PLAIN, 80f))
     }
 
-    @JvmStatic
-    fun drawStringWithShadow(text: String, x: Float, y: Float, colour: Int) {
+    /**
+     * Draws a string at the given position.
+     */
+    fun drawString(text: String, x: Float, y: Float, color: Color) {
         if (ClientFont.isEnabled) {
-            font.drawStringWithShadow(text, x, y - 3f + yIncrease, colour)
+            font.drawString(text, x, y - 2.5f, color, false)
+        } else {
+            if (text.contains(System.lineSeparator())) {
+                val parts = text.split(System.lineSeparator().toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+
+                var newY = 0
+
+                for (s in parts) {
+                    mc.fontRenderer.drawString(s, x.toInt(), y.toInt() + newY, color.rgb)
+                    newY += mc.fontRenderer.FONT_HEIGHT
+                }
+
+                return
+            }
+
+            mc.fontRenderer.drawString(text, x.toInt(), y.toInt(), color.rgb)
+        }
+
+        // we love minecraft's font renderer
+        //glEnable(GL_BLEND)
+    }
+
+    @JvmStatic
+    fun drawStringWithShadow(text: String, x: Float, y: Float, colour: Color) {
+        if (ClientFont.isEnabled) {
+            font.drawStringWithShadow(text, x, y - 2.5f, colour)
             return
         }
 
@@ -47,55 +79,47 @@ object FontUtil : Wrapper {
             var newY = 0.0f
 
             for (s in parts) {
-                minecraft.fontRenderer.drawStringWithShadow(s, x, y + newY, colour)
-                newY += minecraft.fontRenderer.FONT_HEIGHT.toFloat()
+                mc.fontRenderer.drawStringWithShadow(s, x, y + newY, colour.rgb)
+                newY += mc.fontRenderer.FONT_HEIGHT.toFloat()
             }
 
             return
         }
 
-        minecraft.fontRenderer.drawStringWithShadow(text, x, y, colour)
+        mc.fontRenderer.drawStringWithShadow(text, x, y, colour.rgb)
+
+        //glEnable(GL_BLEND)
     }
 
     @JvmStatic
-    fun renderCenteredString(text: String, x: Float, y: Float, colour: Int, centeredY: Boolean) {
-        var y = y
+    fun drawCenteredString(text: String, x: Float, y: Float, colour: Color) {
+        if (text.contains(System.lineSeparator())) {
+            val parts = text.split(System.lineSeparator().toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+
+            var newY = 0.0f
+
+            for (s in parts) {
+                drawStringWithShadow(s, x - getStringWidth(s) / 2f, y + newY, colour)
+
+                newY += getHeight()
+            }
+
+            GlStateManager.disableBlend()
+
+            return
+        }
 
         if (ClientFont.isEnabled) {
-            if (centeredY) {
-                y -= font.height / 2f
-            }
+            font.drawStringWithShadow(text, x - (font.getStringWidth(text) / 2f), y - 3f + yIncrease, colour)
+        } else {
+            GlStateManager.disableBlend()
 
-            if (text.contains("\n")) {
-                val parts = text.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                var newY = 0.0f
-
-                for (s in parts) {
-                    font.drawStringWithShadow(
-                        s, x - font.getStringWidth(s) / 2f, y - 3.5f + yIncrease + newY, colour
-                    )
-
-                    newY += font.height
-                }
-
-                return
-            }
-
-            font.drawStringWithShadow(text, x - getStringWidth(text) / 2f, y - 3f + yIncrease, colour)
-            return
+            mc.fontRenderer.drawStringWithShadow(text, x - mc.fontRenderer.getStringWidth(text) / 2f, y, colour.rgb)
         }
-
-        if (centeredY) {
-            y -= minecraft.fontRenderer.FONT_HEIGHT / 2f
-        }
-
-        minecraft.fontRenderer.drawStringWithShadow(
-            text, x - minecraft.fontRenderer.getStringWidth(text) / 2f, y, colour
-        )
     }
 
     @JvmStatic
-    fun drawIcon(icon: Icon, x: Float, y: Float, colour: Int) {
+    fun drawIcon(icon: Icon, x: Float, y: Float, colour: Color) {
         icons.drawString(icon.char.toString(), x, y, colour, false)
     }
 
@@ -114,16 +138,50 @@ object FontUtil : Wrapper {
 
         return if (ClientFont.isEnabled) {
             font.getStringWidth(text).toFloat()
-        }
-        else {
-            minecraft.fontRenderer.getStringWidth(text).toFloat()
+        } else {
+            mc.fontRenderer.getStringWidth(text).toFloat()
         }
     }
 
     @JvmStatic
-    fun getHeight() = if (ClientFont.isEnabled) font.height else minecraft.fontRenderer.FONT_HEIGHT.toFloat()
+    fun getHeight() = if (ClientFont.isEnabled) font.height - 2f else mc.fontRenderer.FONT_HEIGHT.toFloat()
 
     private fun getFont(name: String): Font {
+        checkDownload()
+
+        val size = JSONObject(
+            FileUtils.readFileToString(
+                File("paragon/font/font_config.json"),
+                StandardCharsets.UTF_8
+            )
+        ).getFloat("size")
+
+        runCatching {
+            val fontStream = FileInputStream("paragon/font/$name.ttf")
+            return getFont(fontStream, size)
+        }.exceptionOrNull()?.printStackTrace()
+
+        return Font("default", Font.PLAIN, size.toInt())
+    }
+
+    private fun getFont(name: String, size: Float): Font {
+        checkDownload()
+
+        runCatching {
+            val fontStream = FileInputStream("paragon/font/$name.ttf")
+            return getFont(fontStream, size)
+        }
+
+        return Font("default", Font.PLAIN, size.toInt())
+    }
+
+    fun getFont(stream: InputStream, size: Float): Font {
+        val font = Font.createFont(Font.TRUETYPE_FONT, stream)
+        stream.close()
+        return font.deriveFont(Font.PLAIN, size)
+    }
+
+    private fun checkDownload() {
         val fontDir = File("paragon/font/")
 
         if (!fontDir.exists()) {
@@ -131,7 +189,7 @@ object FontUtil : Wrapper {
         }
 
         // We need to download the default font
-        if ((fontDir.listFiles()?.size ?: 0) < 2) {
+        if (!(File("paragon/font/font.ttf").exists() || File("paragon/font/font_config.json").exists())) {
             Paragon.INSTANCE.logger.info("Downloading default font...")
 
             runCatching {
@@ -170,34 +228,6 @@ object FontUtil : Wrapper {
                 e.printStackTrace()
             }
         }
-
-        var size = 40f
-
-        try {
-            val jsonObject = JSONObject(
-                FileUtils.readFileToString(File("paragon/font/font_config.json"), StandardCharsets.UTF_8)
-            )
-
-            size = jsonObject.getInt("size").toFloat()
-            yIncrease = jsonObject.getFloat("y_offset")
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-
-        var result = Font("default", Font.PLAIN, size.toInt())
-
-        runCatching {
-            val fontStream = FileInputStream("paragon/font/$name.ttf")
-            return getFont(fontStream, size)
-        }
-
-        return result
-    }
-
-    private fun getFont(stream: InputStream, size: Float): Font {
-        val font = Font.createFont(0, stream)
-        stream.close()
-        return font.deriveFont(Font.PLAIN, size)
     }
 
     enum class Icon(val char: Char) {
@@ -233,7 +263,8 @@ object FontUtil : Wrapper {
         RUNNING('D'),
         EXIT('E'),
         CLOSE('F'),
-        BLOCK('G')
+        BLOCK('G'),
+        CHAT('H')
     }
 
 }

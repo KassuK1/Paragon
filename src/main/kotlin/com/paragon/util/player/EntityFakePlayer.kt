@@ -6,7 +6,9 @@ import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.world.World
 import java.util.*
 
-class EntityFakePlayer(worldIn: World?) : EntityOtherPlayerMP(worldIn!!, GameProfile(UUID.fromString("7880350f-d055-4608-9ad1-bb01e0af8f87"), "FakePlayer")) {
+class EntityFakePlayer(
+    worldIn: World?
+) : EntityOtherPlayerMP(worldIn!!, GameProfile(UUID.fromString("7880350f-d055-4608-9ad1-bb01e0af8f87"), "FakePlayer")) {
 
     init {
         name

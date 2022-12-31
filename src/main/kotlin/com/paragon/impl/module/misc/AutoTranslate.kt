@@ -2,11 +2,12 @@ package com.paragon.impl.module.misc
 
 import com.mojang.realmsclient.gui.ChatFormatting.GRAY
 import com.paragon.Paragon
-import com.paragon.impl.module.Module
-import com.paragon.impl.setting.Setting
 import com.paragon.impl.managers.notifications.Notification
 import com.paragon.impl.managers.notifications.NotificationType
 import com.paragon.impl.module.Category
+import com.paragon.impl.module.Module
+import com.paragon.impl.setting.Setting
+import com.paragon.util.mc
 import com.paragon.util.system.backgroundThread
 import com.paragon.util.system.mainThread
 import me.bush.translator.Language
@@ -30,11 +31,11 @@ object AutoTranslate : Module("AutoTranslate", Category.MISC, "Automatically tra
     ) describedBy "Automatically translate incoming messages"
 
     private val suffix = Setting(
-        "Mark Translation", true
+        "MarkTranslation", true
     ) describedBy "Suffix translated messages with \"[Translated]\"" visibleWhen { incoming.value }
 
     private val incomingLang = Setting(
-        "In Lang", "English"
+        "InLang", "English"
     ) describedBy "Language to translate incoming messages to" visibleWhen { incoming.value }
 
     private val outgoing = Setting(
@@ -42,7 +43,7 @@ object AutoTranslate : Module("AutoTranslate", Category.MISC, "Automatically tra
     ) describedBy "Automatically translate outgoing messages"
 
     private val outgoingLang = Setting(
-        "Out Lang", "English"
+        "OutLang", "English"
     ) describedBy "Language to translate outgoing messages to" visibleWhen { outgoing.value }
 
     private val translator = Translator()
@@ -61,7 +62,7 @@ object AutoTranslate : Module("AutoTranslate", Category.MISC, "Automatically tra
                 // Send chat on main thread
                 mainThread {
                     val messageSuffix = if (suffix.value && sourceLanguage != targetLanguage) "$GRAY [Translated]" else ""
-                    minecraft.ingameGUI?.chatGUI?.printChatMessage(TextComponentString(translatedText + messageSuffix))
+                    mc.ingameGUI?.chatGUI?.printChatMessage(TextComponentString(translatedText + messageSuffix))
                 }
             }
         }
@@ -78,7 +79,7 @@ object AutoTranslate : Module("AutoTranslate", Category.MISC, "Automatically tra
         backgroundThread {
             translate(event.message, getLanguage(outgoingLang.value) ?: return@backgroundThread) {
                 mainThread {
-                    minecraft.player?.sendChatMessage(translatedText)
+                    mc.player?.sendChatMessage(translatedText)
                 }
             }
         }

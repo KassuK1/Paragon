@@ -21,11 +21,11 @@ class Alt(val email: String, val password: String) {
      */
     fun login(): Boolean {
         if (session == null) {
-            val auth = MicrosoftAuthenticator() //Authenticator
             Paragon.INSTANCE.logger.info("logging in with $email")
             try {
-                val result = auth.loginWithCredentials(email, password) //Get auth result
-                session = Session(result.profile.name, result.profile.id, result.accessToken, "legacy") //Set alt session
+                val result = MicrosoftAuthenticator().loginWithCredentials(email, password) //Get auth result
+                //Set alt session
+                session = Session(result.profile.name, result.profile.id, result.accessToken, "legacy")
             } catch (e: MicrosoftAuthenticationException) {
                 e.printStackTrace()
             }

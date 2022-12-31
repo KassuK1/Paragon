@@ -40,7 +40,7 @@ object ColourUtil {
     @JvmStatic
     fun Color.integrateAlpha(alpha: Float): Color {
         return Color(
-            this.red / 255F, this.green / 255F, this.blue / 255F, alpha / 255F
+            this.red / 255F, this.green / 255F, this.blue / 255F, alpha.coerceIn(0f, 255f) / 255F
         )
     }
 
@@ -50,17 +50,28 @@ object ColourUtil {
      */
     @JvmStatic
     fun Color.fade(secondary: Color, factor: Double): Color {
-        val redDiff = secondary.red - this.red
-        val greenDiff = secondary.green - this.green
-        val blueDiff = secondary.blue - this.blue
-        val alphaDiff = secondary.alpha - this.alpha
-
-        val newRed = (this.red + redDiff * factor.coerceIn(0.0, 1.0)).toInt()
-        val newGreen = (this.green + greenDiff * factor.coerceIn(0.0, 1.0)).toInt()
-        val newBlue = (this.blue + blueDiff * factor.coerceIn(0.0, 1.0)).toInt()
-        val newAlpha = (this.alpha + alphaDiff * factor.coerceIn(0.0, 1.0)).toInt()
-
-        return Color(newRed, newGreen, newBlue, newAlpha)
+        return Color(
+            (this.red + (secondary.red - this.red) * factor.coerceIn(0.0, 1.0)).toInt(),
+            (this.green + (secondary.green - this.green) * factor.coerceIn(0.0, 1.0)).toInt(),
+            (this.blue + (secondary.blue - this.blue) * factor.coerceIn(0.0, 1.0)).toInt(),
+            (this.alpha + (secondary.alpha - this.alpha) * factor.coerceIn(0.0, 1.0)).toInt()
+        )
     }
+
+    fun Color.glColour() {
+        glColor4f(this.red / 255f, this.green / 255f, this.blue / 255f, this.alpha / 255f)
+    }
+
+    fun Int.toColour(): Color {
+        return Color(this)
+    }
+
+    val Int.rgba: FloatArray
+        get() = floatArrayOf(
+            (this shr 16 and 0xFF) / 255F, // Red
+            (this shr 8 and 0xFF) / 255F,  // Green
+            (this shr 0 and 0xFF) / 255F,  // Blue
+            (this shr 24 and 0xff) / 255F  // Alpha
+        )
 
 }

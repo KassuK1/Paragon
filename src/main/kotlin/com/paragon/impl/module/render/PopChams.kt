@@ -8,6 +8,7 @@ import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.client.Colours
 import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IEntityPlayer
+import com.paragon.util.mc
 import me.surge.animation.Animation
 import me.surge.animation.Easing
 import net.minecraft.client.entity.EntityOtherPlayerMP
@@ -59,7 +60,7 @@ object PopChams : Module("PopChams", Category.RENDER, "PopChams duh") {
 
     @Listener
     fun onPop(event: TotemPopEvent) {
-        if (!self.value && event.player == minecraft.player) {
+        if (!self.value && event.player == mc.player) {
             return
         }
 
@@ -77,7 +78,14 @@ object PopChams : Module("PopChams", Category.RENDER, "PopChams duh") {
     fun onRenderEntity(event: RenderEntityEvent) {
         if (event.entity is EntityPlayer) {
             chamCache[event.entity] = ChamData(
-                event.modelBase as ModelPlayer, event.entity, event.limbSwing, event.limbSwingAmount, event.ageInTicks, event.netHeadYaw, event.headPitch, event.scale
+                event.modelBase as ModelPlayer,
+                event.entity,
+                event.limbSwing,
+                event.limbSwingAmount,
+                event.ageInTicks,
+                event.netHeadYaw,
+                event.headPitch,
+                event.scale
             )
         }
     }
@@ -87,13 +95,13 @@ object PopChams : Module("PopChams", Category.RENDER, "PopChams duh") {
             it.animation.state = true
             val animFac = it.animation.getAnimationFactor()
 
-            minecraft.renderManager.isRenderShadow = false
+            mc.renderManager.isRenderShadow = false
 
             glPushMatrix()
 
             //Positioning
             glTranslated(
-                (minecraft.renderManager.viewerPosX - it.entity.posX) * -1.0, 1.4 + ((minecraft.renderManager.viewerPosY - it.entity.posY) * -1.0), (minecraft.renderManager.viewerPosZ - it.entity.posZ) * -1.0
+                (mc.renderManager.viewerPosX - it.entity.posX) * -1.0, 1.4 + ((mc.renderManager.viewerPosY - it.entity.posY) * -1.0), (mc.renderManager.viewerPosZ - it.entity.posZ) * -1.0
             )
 
             if (move.value) {
@@ -119,7 +127,7 @@ object PopChams : Module("PopChams", Category.RENDER, "PopChams duh") {
                     1.0 - animFac.coerceIn(0.0, 1.0)
                 }
                 else {
-                    outlineColor.alpha / 255.0
+                    outlineColor.value.alpha / 255.0
                 }.toFloat()
             )
 
@@ -159,7 +167,7 @@ object PopChams : Module("PopChams", Category.RENDER, "PopChams duh") {
             glPopAttrib()
             glPopMatrix()
             glPopMatrix()
-            minecraft.renderManager.isRenderShadow = minecraft.gameSettings.entityShadows
+            mc.renderManager.isRenderShadow = mc.gameSettings.entityShadows
         }
     }
 

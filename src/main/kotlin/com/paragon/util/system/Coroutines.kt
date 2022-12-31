@@ -34,7 +34,9 @@ fun mainThread(block: () -> Unit): ListenableFuture<Any> = mc.addScheduledTask(b
 // BIG
 fun backgroundThread(block: suspend CoroutineScope.() -> Unit) = Background.launch(block = block)
 
-fun CoroutineScope.lazyLaunch(block: suspend CoroutineScope.() -> Unit) = launch(start = CoroutineStart.LAZY, block = block)
+fun CoroutineScope.lazyLaunch(block: suspend CoroutineScope.() -> Unit) = launch(
+    start = CoroutineStart.LAZY, block = block
+)
 
 /**
  * Runs the given block on another thread. If the delegated

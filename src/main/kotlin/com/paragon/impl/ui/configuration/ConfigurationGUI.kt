@@ -1,12 +1,14 @@
 package com.paragon.impl.ui.configuration
 
-import com.paragon.Paragon
 import com.paragon.impl.module.client.ClickGUI
 import com.paragon.impl.module.client.ClickGUI.darkenBackground
+import com.paragon.impl.ui.hub.HubWindow
 import com.paragon.impl.ui.util.Click
 import com.paragon.impl.ui.windows.Window
+import com.paragon.util.render.RenderUtil
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Mouse
+import java.awt.Color
 
 /**
  * @author Surge
@@ -16,20 +18,15 @@ class ConfigurationGUI : GuiScreen() {
 
     var closeOnEscape = true
 
-    private var currentGUI: GuiImplementation? = null
+    private var currentGUI: GuiImplementation? = ClickGUI.getGUI()
+    private val hub = HubWindow(this, 651f, 5f, 90f, 16f)
     val windowsList: MutableList<Window> = mutableListOf()
     val removeBuffer: MutableList<Window> = mutableListOf()
-
-    init {
-        currentGUI = ClickGUI.getGUI()
-    }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         super.drawScreen(mouseX, mouseY, partialTicks)
 
-        Paragon.INSTANCE.taskbar.tooltip = ""
-
-        if (currentGUI != ClickGUI.getGUI()) {
+        if ((currentGUI?.javaClass ?: return) != ClickGUI.getGUI().javaClass) {
             currentGUI = ClickGUI.getGUI()
             currentGUI?.initGui()
         }
@@ -47,16 +44,18 @@ class ConfigurationGUI : GuiScreen() {
         }
 
         if (darkenBackground.value) {
-            drawDefaultBackground()
+            RenderUtil.drawRect(0f, 0f, width.toFloat(), height.toFloat(), Color(0, 0, 0, 150))
         }
 
         currentGUI?.width = width.toFloat()
         currentGUI?.height = height.toFloat()
         currentGUI?.drawScreen(mouseX, mouseY, mouseDelta)
 
-        windowsList.forEach { it.draw(mouseX, mouseY, mouseDelta) }
+        hub.draw(mouseX.toFloat(), mouseY.toFloat(), mouseDelta)
 
-        Paragon.INSTANCE.taskbar.draw(mouseX, mouseY)
+        windowsList.forEach {
+            it.draw(mouseX, mouseY, mouseDelta)
+        }
     }
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
@@ -74,7 +73,7 @@ class ConfigurationGUI : GuiScreen() {
 
         currentGUI?.mouseClicked(mouseX, mouseY, mouseButton)
 
-        Paragon.INSTANCE.taskbar.mouseClicked(mouseX, mouseY, Click.getClick(mouseButton))
+        hub.mouseClicked(mouseX.toFloat(), mouseY.toFloat(), Click.getClick(mouseButton))
     }
 
     override fun mouseReleased(mouseX: Int, mouseY: Int, state: Int) {
@@ -83,6 +82,8 @@ class ConfigurationGUI : GuiScreen() {
         windowsList.forEach { it.mouseReleased(mouseX, mouseY, Click.getClick(state)) }
 
         currentGUI?.mouseReleased(mouseX, mouseY, state)
+
+        hub.mouseReleased(mouseX.toFloat(), mouseY.toFloat(), Click.getClick(state))
     }
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {

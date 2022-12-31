@@ -4,6 +4,7 @@ import com.google.common.base.Predicate;
 import com.paragon.Paragon;
 import com.paragon.impl.event.player.RaytraceEntityEvent;
 import com.paragon.impl.event.render.AspectEvent;
+import com.paragon.impl.event.render.RenderWorldEvent;
 import com.paragon.impl.event.render.entity.CameraClipEvent;
 import com.paragon.impl.event.render.entity.HurtcamEvent;
 import net.minecraft.client.Minecraft;
@@ -104,6 +105,16 @@ public abstract class MixinEntityRenderer {
             Project.gluPerspective(fov, event.getRatio(), z1, z2);
         } else {
             Project.gluPerspective(fov, (float) Minecraft.getMinecraft().displayWidth / Minecraft.getMinecraft().displayHeight, z1, z2);
+        }
+    }
+
+    @Inject(method = "renderWorld", at = @At("HEAD"), cancellable = true)
+    public void hookRenderWorld(float partialTicks, long finishTimeNano, CallbackInfo ci) {
+        RenderWorldEvent event = new RenderWorldEvent();
+        Paragon.INSTANCE.getEventBus().post(event);
+
+        if (event.isCancelled()) {
+            ci.cancel();
         }
     }
 

@@ -1,7 +1,7 @@
 package com.paragon.util.player
 
 import com.paragon.impl.managers.rotation.Rotate
-import com.paragon.util.Wrapper
+import com.paragon.util.mc
 import net.minecraft.network.play.client.CPacketPlayer
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.MathHelper
@@ -13,7 +13,7 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 
 @SideOnly(Side.CLIENT)
-object RotationUtil : Wrapper {
+object RotationUtil {
 
     /**
      * Gets the rotation to a block position
@@ -28,15 +28,28 @@ object RotationUtil : Wrapper {
     }
 
     /**
-     * Gets the yaw and pitch to rotate to a Vec3D
+     * Gets the yaw and pitch to rotate to a [Vec3d].
      *
-     * @param vec3d The Vec3D to calculate rotations to
-     * @return A Vec2f of the angles
+     * @param vec3d The [Vec3d] to calculate rotations to
+     * @return A [Vec2f] of the angles
      */
     @JvmStatic
     fun getRotationToVec3d(vec3d: Vec3d): Vec2f {
-        val yaw = (Math.toDegrees(atan2(vec3d.subtract(minecraft.player.getPositionEyes(1f)).z, vec3d.subtract(minecraft.player.getPositionEyes(1f)).x)) - 90).toFloat()
-        val pitch = Math.toDegrees(-atan2(vec3d.subtract(minecraft.player.getPositionEyes(1f)).y, hypot(vec3d.subtract(minecraft.player.getPositionEyes(1f)).x, vec3d.subtract(minecraft.player.getPositionEyes(1f)).z))).toFloat()
+        val yaw = (Math.toDegrees(
+            atan2(
+                vec3d.subtract(mc.player.getPositionEyes(1f)).z,
+                vec3d.subtract(mc.player.getPositionEyes(1f)).x
+            )
+        ) - 90).toFloat()
+        val pitch = Math.toDegrees(
+            -atan2(
+                vec3d.subtract(mc.player.getPositionEyes(1f)).y,
+                hypot(
+                    vec3d.subtract(mc.player.getPositionEyes(1f)).x,
+                    vec3d.subtract(mc.player.getPositionEyes(1f)).z
+                )
+            )
+        ).toFloat()
 
         return Vec2f(MathHelper.wrapDegrees(yaw), MathHelper.wrapDegrees(pitch))
     }
@@ -50,9 +63,9 @@ object RotationUtil : Wrapper {
     }
 
     fun rotate(rotationVec: Vec2f, packet: Boolean) {
-        minecraft.player.connection.sendPacket(
+        mc.player.connection.sendPacket(
             CPacketPlayer.Rotation(
-                rotationVec.x, rotationVec.y, minecraft.player.onGround
+                rotationVec.x, rotationVec.y, mc.player.onGround
             )
         )
 
@@ -60,9 +73,9 @@ object RotationUtil : Wrapper {
             return
         }
 
-        minecraft.player.rotationYaw = rotationVec.x
-        minecraft.player.rotationYawHead = rotationVec.x
-        minecraft.player.rotationPitch = rotationVec.y
+        mc.player.rotationYaw = rotationVec.x
+        mc.player.rotationYawHead = rotationVec.x
+        mc.player.rotationPitch = rotationVec.y
     }
 
     fun normalizeAngle(angle: Float): Float {
@@ -77,6 +90,8 @@ object RotationUtil : Wrapper {
         if (normalizedAngle < -180.0f) {
             normalizedAngle += 360.0f
         }
+
         return normalizedAngle
     }
+
 }

@@ -4,6 +4,7 @@ import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.util.player.PlayerUtil
 import com.paragon.impl.module.Category
+import com.paragon.util.mc
 import com.paragon.util.string.StringUtil
 
 /**
@@ -20,11 +21,11 @@ object Sprint : Module("Sprint", Category.MOVEMENT, "Automatically sprint") {
 
     override fun onDisable() {
         // Stop sprinting when we disable
-        minecraft.player?.isSprinting = false
+        mc.player?.isSprinting = false
     }
 
     override fun onTick() {
-        minecraft.player?.let {
+        mc.player?.let {
             when (mode.value) {
                 Mode.OMNI -> {
                     if (onlyWhenMoving.value && !PlayerUtil.isMoving) {

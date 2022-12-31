@@ -6,6 +6,7 @@ import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
+import com.paragon.util.mc
 import com.paragon.util.render.RubiksCrystalUtil
 import me.surge.animation.Easing
 import net.minecraft.client.Minecraft
@@ -59,7 +60,7 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
 
     private val bounce = Setting(
         "Bounce", false
-    ) describedBy "Make the crystals bounce like they do in vanilla"
+    ) describedBy "Make the crystals bounce like they do in vanilla" subOf crystals
 
     private val scaleSetting = Setting(
         "Scale", 0.6f, 0.0f, 1f, 0.01f
@@ -137,6 +138,7 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
         if (!texture.value) {
             glDisable(GL_TEXTURE_2D)
         }
+
         val originalBlend = glIsEnabled(GL_BLEND)
 
         // Enable blend
@@ -158,6 +160,7 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
         if (walls.value) {
             glDisable(GL_DEPTH_TEST)
         }
+
         when (mode.value) {
             Mode.WIRE -> glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
             Mode.WIRE_MODEL, Mode.MODEL -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
@@ -172,7 +175,7 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
 
         // Set colour
         glColor4f(
-            colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.alpha / 255f
+            colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.value.alpha / 255f
         )
 
         // Render model
@@ -187,8 +190,9 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
         if (mode.value == Mode.WIRE_MODEL) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         }
+
         glColor4f(
-            colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, if (mode.value == Mode.MODEL) colour.alpha / 255f else 1f
+            colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, if (mode.value == Mode.MODEL) colour.value.alpha / 255f else 1f
         )
 
         // Render model
@@ -221,9 +225,12 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
 
         // Reset colour
         GlStateManager.color(1f, 1f, 1f, 1f)
+
         if (transparent.value) {
             GlStateManager.disableBlendProfile(GlStateManager.Profile.TRANSPARENT_MODEL)
+            GlStateManager.enableBlendProfile(GlStateManager.Profile.DEFAULT)
         }
+
         glPopAttrib()
         glPopMatrix()
     }
@@ -279,7 +286,7 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
 
             // Set colour
             glColor4f(
-                colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.alpha / 255f
+                colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, colour.value.alpha / 255f
             )
 
             // Render crystal
@@ -294,9 +301,11 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
             if (mode.value == Mode.WIRE_MODEL) {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
             }
+
             glColor4f(
-                colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, if (mode.value == Mode.MODEL) colour.alpha / 255f else 1f
+                colour.value.red / 255f, colour.value.green / 255f, colour.value.blue / 255f, if (mode.value == Mode.MODEL) colour.value.alpha / 255f else 1f
             )
+
             if (mode.value == Mode.WIRE_MODEL) {
                 renderCrystal(event)
             }
@@ -352,38 +361,51 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
             GlStateManager.pushMatrix()
             GlStateManager.scale(2.0f, 2.0f, 2.0f)
             GlStateManager.translate(0.0f, -0.5f, 0.0f)
+
             if (event.base != null) {
                 event.base.render(event.scale)
             }
+
             GlStateManager.rotate(event.limbSwingAmount, 0.0f, 1.0f, 0.0f)
+
             if (event.base != null) {
                 GlStateManager.translate(0.0f, 1.2f, 0.0f)
             }
+
             else {
                 GlStateManager.translate(0.0f, 1.0f, 0.0f)
             }
+
             GlStateManager.rotate(60.0f, 0.7071f, 0.0f, 0.7071f)
-            GlStateManager.scale(0.875f, 0.875f, 0.875f)
-            GlStateManager.rotate(60.0f, 0.7071f, 0.0f, 0.7071f)
-            GlStateManager.rotate(event.limbSwingAmount, 0.0f, 1.0f, 0.0f)
-            if (glass.value) {
-                event.glass.render(event.scale)
-            }
-            GlStateManager.rotate(60.0f, 0.7071f, 0.0f, 0.7071f)
-            GlStateManager.scale(0.875f, 0.875f, 0.875f)
-            GlStateManager.rotate(60.0f, 0.7071f, 0.0f, 0.7071f)
-            GlStateManager.rotate(event.limbSwingAmount, 0.0f, 1.0f, 0.0f)
-            if (glass.value) {
-                event.glass.render(event.scale)
-            }
             GlStateManager.scale(0.875f, 0.875f, 0.875f)
             GlStateManager.rotate(60.0f, 0.7071f, 0.0f, 0.7071f)
             GlStateManager.rotate(event.limbSwingAmount, 0.0f, 1.0f, 0.0f)
 
+            if (glass.value) {
+                event.glass.render(event.scale)
+            }
+
+            GlStateManager.rotate(60.0f, 0.7071f, 0.0f, 0.7071f)
+            GlStateManager.scale(0.875f, 0.875f, 0.875f)
+            GlStateManager.rotate(60.0f, 0.7071f, 0.0f, 0.7071f)
+            GlStateManager.rotate(event.limbSwingAmount, 0.0f, 1.0f, 0.0f)
+
+            if (glass.value) {
+                event.glass.render(event.scale)
+            }
+
+            GlStateManager.scale(0.875f, 0.875f, 0.875f)
+            GlStateManager.rotate(60.0f, 0.7071f, 0.0f, 0.7071f)
+            GlStateManager.rotate(event.limbSwingAmount, 0.0f, 1.0f, 0.0f)
+
+            val CUBELET_SCALE = 0.5
+
             // Scale cubelets
+            GlStateManager.scale(0.72, 0.72, 0.72)
             GlStateManager.scale(CUBELET_SCALE, CUBELET_SCALE, CUBELET_SCALE)
             event.scale = (event.scale * (CUBELET_SCALE * 2)).toFloat()
             val currentTime = Minecraft.getSystemTime()
+
             if (currentTime - time.value > lastTime) {
                 val currentSide = RubiksCrystalUtil.cubeSides[rotating]
                 val cubletsTemp = arrayOf(
@@ -402,6 +424,7 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
                 RubiksCrystalUtil.cubeletStatus[currentSide[8]] = cubletsTemp[2]
 
                 val trans = RubiksCrystalUtil.cubeSideTransforms[rotating]
+
                 for (x in -1..1) {
                     for (y in -1..1) {
                         for (z in -1..1) {
@@ -411,9 +434,11 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
                         }
                     }
                 }
+
                 rotating = ThreadLocalRandom.current().nextInt(0, 5 + 1)
                 lastTime = currentTime
             }
+
             for (x in -1..1) {
                 for (y in -1..1) {
                     for (z in -1..1) {
@@ -429,6 +454,7 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
             val trans = RubiksCrystalUtil.cubeSideTransforms[rotating]
             GlStateManager.pushMatrix()
             GlStateManager.translate(trans[0] * CUBELET_SCALE, trans[1] * CUBELET_SCALE, trans[2] * CUBELET_SCALE)
+
             val angle = Math.toRadians(
                 Easing.EXPO_IN_OUT.ease(((currentTime - lastTime).toFloat() / time.value).toDouble())
             ).toFloat() * 90
@@ -500,26 +526,32 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
 
     private fun drawCubeletStatic(scale: Float, x: Int, y: Int, z: Int) {
         val id = RubiksCrystalUtil.cubeletLookup[x + 1][y + 1][z + 1]
+
         if (Arrays.stream(RubiksCrystalUtil.cubeSides[rotating]).anyMatch { i: Int -> i == id }) {
             return
         }
+
         drawCubelet(scale, x, y, z, id)
     }
 
     private fun drawCubeletRotating(scale: Float, x: Int, y: Int, z: Int) {
         val id = RubiksCrystalUtil.cubeletLookup[x + 1][y + 1][z + 1]
+
         if (Arrays.stream(RubiksCrystalUtil.cubeSides[rotating]).noneMatch { i: Int -> i == id }) {
             return
         }
+
         val transform = RubiksCrystalUtil.cubeSideTransforms[rotating]
         drawCubelet(scale, x - transform[0], y - transform[1], z - transform[2], id)
     }
 
     private fun applyRotation(x: Int, y: Int, z: Int, rX: Int, rY: Int, rZ: Int) {
         val id = RubiksCrystalUtil.cubeletLookup[x + 1][y + 1][z + 1]
+
         if (Arrays.stream(RubiksCrystalUtil.cubeSides[rotating]).noneMatch { i: Int -> i == id }) {
             return
         }
+
         val angle = Math.toRadians(90.0).toFloat()
         val xx = (rX * sin((angle / 2).toDouble())).toFloat()
         val yy = (rY * sin((angle / 2).toDouble())).toFloat()
@@ -531,7 +563,7 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private fun drawCubelet(scale: Float, x: Int, y: Int, z: Int, id: Int) {
         GlStateManager.pushMatrix()
-        GlStateManager.translate(x * CUBELET_SCALE, y * CUBELET_SCALE, z * CUBELET_SCALE)
+        GlStateManager.translate(x * 0.5, y * 0.5, z * 0.5)
         GlStateManager.pushMatrix()
         GlStateManager.rotate(RubiksCrystalUtil.cubeletStatus[id])
         if (cube.value) {
@@ -548,7 +580,7 @@ object Chams : Module("Chams", Category.RENDER, "Shows entities through walls") 
      * @return Is the entity valid
      */
     private fun isEntityValid(entityIn: Entity): Boolean {
-        return entityIn is EntityPlayer && entityIn !== minecraft.player && players.value || entityIn is EntityLiving && entityIn !is EntityMob && passives.value || entityIn is EntityMob && mobs.value
+        return entityIn is EntityPlayer && entityIn !== mc.player && players.value || entityIn is EntityLiving && entityIn !is EntityMob && passives.value || entityIn is EntityMob && mobs.value
     }
 
     enum class Mode {

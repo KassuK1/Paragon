@@ -4,6 +4,7 @@ import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IEntityRenderer
+import com.paragon.util.mc
 import com.paragon.util.render.shader.shaders.*
 import com.paragon.util.string.StringUtil
 import net.minecraft.client.renderer.GlStateManager
@@ -127,7 +128,7 @@ object Shader : Module("Shader", Category.RENDER, "Apply a shader to entities an
 
                 if (lastScaleFactor != event.resolution.scaleFactor.toFloat() || lastScaleWidth != event.resolution.scaledWidth.toFloat() || lastScaleHeight != event.resolution.scaledHeight.toFloat()) {
                     frameBuffer!!.deleteFramebuffer()
-                    frameBuffer = Framebuffer(minecraft.displayWidth, minecraft.displayHeight, true)
+                    frameBuffer = Framebuffer(mc.displayWidth, mc.displayHeight, true)
                     frameBuffer!!.framebufferClear()
                 }
                 lastScaleFactor = event.resolution.scaleFactor.toFloat()
@@ -135,38 +136,38 @@ object Shader : Module("Shader", Category.RENDER, "Apply a shader to entities an
                 lastScaleHeight = event.resolution.scaledHeight.toFloat()
             }
             else {
-                frameBuffer = Framebuffer(minecraft.displayWidth, minecraft.displayHeight, true)
+                frameBuffer = Framebuffer(mc.displayWidth, mc.displayHeight, true)
             }
 
             frameBuffer!!.bindFramebuffer(false)
-            val previousShadows = minecraft.gameSettings.entityShadows
-            minecraft.gameSettings.entityShadows = false
-            (minecraft.entityRenderer as IEntityRenderer).hookSetupCameraTransform(event.partialTicks, 0)
+            val previousShadows = mc.gameSettings.entityShadows
+            mc.gameSettings.entityShadows = false
+            (mc.entityRenderer as IEntityRenderer).hookSetupCameraTransform(event.partialTicks, 0)
 
-            for (entity in minecraft.world.loadedEntityList) {
-                if (entity != null && entity !== minecraft.player && isEntityValid(entity)) {
-                    minecraft.renderManager.renderEntityStatic(entity, event.partialTicks, false)
+            for (entity in mc.world.loadedEntityList) {
+                if (entity != null && entity !== mc.player && isEntityValid(entity)) {
+                    mc.renderManager.renderEntityStatic(entity, event.partialTicks, false)
                 }
             }
 
-            for (tileEntity in minecraft.world.loadedTileEntityList) {
+            for (tileEntity in mc.world.loadedTileEntityList) {
                 if (isStorageValid(tileEntity)) {
-                    val x = minecraft.renderManager.viewerPosX
-                    val y = minecraft.renderManager.viewerPosY
-                    val z = minecraft.renderManager.viewerPosZ
+                    val x = mc.renderManager.viewerPosX
+                    val y = mc.renderManager.viewerPosY
+                    val z = mc.renderManager.viewerPosZ
                     TileEntityRendererDispatcher.instance.render(
-                        tileEntity, tileEntity.pos.x - x, tileEntity.pos.y - y, tileEntity.pos.z - z, minecraft.renderPartialTicks
+                        tileEntity, tileEntity.pos.x - x, tileEntity.pos.y - y, tileEntity.pos.z - z, mc.renderPartialTicks
                     )
                 }
             }
 
-            minecraft.gameSettings.entityShadows = previousShadows
+            mc.gameSettings.entityShadows = previousShadows
             GlStateManager.enableBlend()
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
             frameBuffer!!.unbindFramebuffer()
-            minecraft.framebuffer.bindFramebuffer(true)
-            minecraft.entityRenderer.disableLightmap()
+            mc.framebuffer.bindFramebuffer(true)
+            mc.entityRenderer.disableLightmap()
             RenderHelper.disableStandardItemLighting()
             GlStateManager.pushMatrix()
 
@@ -211,7 +212,7 @@ object Shader : Module("Shader", Category.RENDER, "Apply a shader to entities an
                 }
             }
 
-            minecraft.entityRenderer.setupOverlayRendering()
+            mc.entityRenderer.setupOverlayRendering()
             glBindTexture(GL_TEXTURE_2D, frameBuffer!!.framebufferTexture)
             glBegin(GL_QUADS)
             glTexCoord2d(0.0, 1.0)
@@ -227,8 +228,8 @@ object Shader : Module("Shader", Category.RENDER, "Apply a shader to entities an
             // Stop drawing shader
             GL20.glUseProgram(0)
             glPopMatrix()
-            minecraft.entityRenderer.enableLightmap()
-            minecraft.entityRenderer.setupOverlayRendering()
+            mc.entityRenderer.enableLightmap()
+            mc.entityRenderer.setupOverlayRendering()
             GlStateManager.popMatrix()
             GlStateManager.popAttrib()
         }

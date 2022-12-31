@@ -25,4 +25,7 @@ public interface ICPacketPlayer {
     @Accessor("onGround")
     void hookSetOnGround(boolean onGround);
 
+    @Accessor("moving")
+    boolean hookIsMoving();
+
 }

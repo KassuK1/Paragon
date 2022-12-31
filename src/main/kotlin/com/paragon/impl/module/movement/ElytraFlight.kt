@@ -12,6 +12,7 @@ import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IMinecraft
 import com.paragon.mixins.accessor.ITimer
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import com.paragon.util.string.StringUtil.getFormattedText
 import net.minecraft.network.play.client.CPacketEntityAction
 
@@ -59,26 +60,26 @@ object ElytraFlight : Module("ElytraFlight", Category.MOVEMENT, "Allows for easi
     ) describedBy "How long a tick lasts for" subOf takeOff
 
     override fun onEnable() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         if (takeOff.value) {
             // Make sure we aren't elytra flying
-            if (!minecraft.player.isElytraFlying) {
+            if (!mc.player.isElytraFlying) {
 
                 // Make the game slower
-                ((minecraft as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50 / takeOffTimer.value)
+                ((mc as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50 / takeOffTimer.value)
 
-                if (minecraft.player.onGround) {
+                if (mc.player.onGround) {
                     // Jump if we're on the ground
-                    minecraft.player.jump()
+                    mc.player.jump()
                 }
                 else {
                     // Make us fly if we are off the ground
-                    minecraft.player.connection.sendPacket(
+                    mc.player.connection.sendPacket(
                         CPacketEntityAction(
-                            minecraft.player, CPacketEntityAction.Action.START_FALL_FLYING
+                            mc.player, CPacketEntityAction.Action.START_FALL_FLYING
                         )
                     )
                 }
@@ -88,18 +89,19 @@ object ElytraFlight : Module("ElytraFlight", Category.MOVEMENT, "Allows for easi
 
     override fun onDisable() {
         // Set us back to normal speed
-        ((minecraft as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50f)
+        ((mc as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50f)
     }
 
     @Listener
     fun onTravel(travelEvent: TravelEvent) {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
-        if (minecraft.player.isElytraFlying) {
+
+        if (mc.player.isElytraFlying) {
 
             // Set us to normal speed if we are flying
-            ((minecraft as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50f)
+            ((mc as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50f)
             if (mode.value != Mode.BOOST) {
                 // Cancel motion
                 travelEvent.cancel()
@@ -134,7 +136,7 @@ object ElytraFlight : Module("ElytraFlight", Category.MOVEMENT, "Allows for easi
                     handleStrict()
                 }
 
-                Mode.BOOST -> if (minecraft.gameSettings.keyBindForward.isKeyDown && !(minecraft.player.posX - minecraft.player.lastTickPosX > flySpeed.value || minecraft.player.posZ - minecraft.player.lastTickPosZ > flySpeed.value)) {
+                Mode.BOOST -> if (mc.gameSettings.keyBindForward.isKeyDown && !(mc.player.posX - mc.player.lastTickPosX > flySpeed.value || mc.player.posZ - mc.player.lastTickPosZ > flySpeed.value)) {
                     // Move forward
                     propel(flySpeed.value * if (cancelMotion.value) 1f else 0.015f)
                 }
@@ -146,36 +148,36 @@ object ElytraFlight : Module("ElytraFlight", Category.MOVEMENT, "Allows for easi
     }
 
     private fun handleControl() {
-        if (minecraft.gameSettings.keyBindJump.isKeyDown) {
+        if (mc.gameSettings.keyBindJump.isKeyDown) {
             // Increase Y
-            minecraft.player.motionY = ascend.value
+            mc.player.motionY = ascend.value
         }
 
-        if (minecraft.gameSettings.keyBindSneak.isKeyDown) {
+        if (mc.gameSettings.keyBindSneak.isKeyDown) {
             // Decrease Y
-            minecraft.player.motionY = -descend.value
+            mc.player.motionY = -descend.value
         }
     }
 
     private fun handleStrict() {
-        if (minecraft.gameSettings.keyBindJump.isKeyDown) {
+        if (mc.gameSettings.keyBindJump.isKeyDown) {
             // Increase pitch
-            minecraft.player.rotationPitch = ascendPitch.value
+            mc.player.rotationPitch = ascendPitch.value
 
             // Increase Y
-            minecraft.player.motionY = ascend.value
+            mc.player.motionY = ascend.value
         }
-        else if (minecraft.gameSettings.keyBindSneak.isKeyDown) {
+        else if (mc.gameSettings.keyBindSneak.isKeyDown) {
             // Decrease pitch
-            minecraft.player.rotationPitch = descendPitch.value
+            mc.player.rotationPitch = descendPitch.value
 
             // Decrease Y
-            minecraft.player.motionY = -descend.value
+            mc.player.motionY = -descend.value
         }
         else {
             if (lockPitch.value) {
                 // Set pitch if we aren't moving
-                minecraft.player.rotationPitch = lockPitchVal.value
+                mc.player.rotationPitch = lockPitchVal.value
             }
         }
     }

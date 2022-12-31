@@ -9,6 +9,7 @@ import com.paragon.impl.managers.rotation.RotationPriority
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
 import com.paragon.util.calculations.Timer
+import com.paragon.util.mc
 import com.paragon.util.player.RotationUtil
 import com.paragon.util.world.BlockUtil
 import com.paragon.util.world.BlockUtil.getBlockAtPos
@@ -40,7 +41,7 @@ object Lawnmower : Module("Lawnmower", Category.MISC, "Removes grass and flowers
     private val toRemove = ArrayDeque<BlockPos>()
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
@@ -50,7 +51,7 @@ object Lawnmower : Module("Lawnmower", Category.MISC, "Removes grass and flowers
 
         toRemove.filter {
             BlockUtil.canSeePos(it) && it.getDistance(
-                minecraft.player.posX.toInt(), (minecraft.player.posY + minecraft.player.getEyeHeight()).toInt(), minecraft.player.posZ.toInt()
+                mc.player.posX.toInt(), (mc.player.posY + mc.player.getEyeHeight()).toInt(), mc.player.posZ.toInt()
             ) <= range.value
         }
 
@@ -66,16 +67,16 @@ object Lawnmower : Module("Lawnmower", Category.MISC, "Removes grass and flowers
                 )
             }
             else if (rotateMode.value == Rotate.PACKET) {
-                minecraft.player.connection.sendPacket(
+                mc.player.connection.sendPacket(
                     CPacketPlayer.Rotation(
-                        rotation.x, rotation.y, minecraft.player.onGround
+                        rotation.x, rotation.y, mc.player.onGround
                     )
                 )
             }
 
-            minecraft.objectMouseOver.sideHit
+            mc.objectMouseOver.sideHit
 
-            minecraft.player.connection.sendPacket(
+            mc.player.connection.sendPacket(
                 CPacketPlayerDigging(
                     CPacketPlayerDigging.Action.START_DESTROY_BLOCK, blockPos, BlockUtil.getFacing(blockPos) ?: return
                 )

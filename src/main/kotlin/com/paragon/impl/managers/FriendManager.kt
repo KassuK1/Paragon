@@ -8,7 +8,7 @@ import net.minecraft.entity.player.EntityPlayer
  */
 class FriendManager {
 
-    // Wanted to use UUIDs, but Mojangs obese and will rate limit me
+    // Wanted to use UUIDs, but Mojang is obese and will rate limit me
     val names: MutableList<String> = ArrayList()
 
     /**
@@ -17,9 +17,7 @@ class FriendManager {
      * @param name The name to check
      * @return If the given name is a friend
      */
-    fun isFriend(name: String): Boolean {
-        return names.contains(name)
-    }
+    fun isFriend(name: String) = names.contains(name)
 
     /**
      * Adds a player to our players list
@@ -48,8 +46,6 @@ class FriendManager {
      *
      * @param name The name of the player to remove
      */
-    fun removePlayer(name: String) {
-        names.removeIf { it == name }
-    }
+    fun removePlayer(name: String) = names.removeIf { it == name }.let { return@let }
 
 }

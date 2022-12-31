@@ -1,6 +1,5 @@
 package com.paragon.util.render.font
 
-import com.paragon.util.Wrapper
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.util.ChatAllowedCharacters
 import net.minecraftforge.fml.relauncher.Side
@@ -8,13 +7,15 @@ import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.awt.Font
+import kotlin.math.min
 import kotlin.random.Random
 
 /**
- * @author Cosmos, Surge
+ * @author Cosmos
+ * @author Surge
  */
 @SideOnly(Side.CLIENT)
-class FontRenderer(font: Font) : Wrapper {
+class FontRenderer(font: Font) {
 
     private val fontHeight: Int
     private val defaultFont: ImageAWT
@@ -30,21 +31,23 @@ class FontRenderer(font: Font) : Wrapper {
     val size: Int
         get() = defaultFont.font.size
 
-    fun drawStringWithShadow(text: String, x: Float, y: Float, color: Int): Int {
-        return drawString(text, x, y, color, true)
+    fun drawStringWithShadow(text: String, x: Float, y: Float, colour: Color): Int {
+        return drawString(text, x, y, colour, true)
     }
 
-    fun drawString(text: String, x: Float, y: Float, color: Int, dropShadow: Boolean): Int {
-        if (text.contains("\n")) {
-            val parts = text.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+    fun drawString(text: String, x: Float, y: Float, colour: Color, dropShadow: Boolean): Int {
+        val alpha = colour.alpha.coerceAtLeast(5)
+
+        if (text.contains(System.lineSeparator())) {
+            val parts = text.split(System.lineSeparator().toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
             var newY = 0.0f
 
             for (s in parts) {
                 if (dropShadow) {
-                    drawText(s, x + 0.6f, y + newY + 0.6f, Color(0, 0, 0, 150).rgb, true)
+                    drawText(s, x + 0.6f, y + newY + 0.6f, Color(0, 0, 0, min(alpha, 150)), true)
                 }
 
-                drawText(s, x, y + newY, color, dropShadow)
+                drawText(s, x, y + newY, colour, false)
                 newY += height
             }
 
@@ -52,13 +55,13 @@ class FontRenderer(font: Font) : Wrapper {
         }
 
         if (dropShadow) {
-            drawText(text, x + 0.6f, y + 0.6f, Color(0, 0, 0, 150).rgb, true)
+            drawText(text, x + 0.6f, y + 0.6f, Color(0, 0, 0, min(alpha, 150)), true)
         }
 
-        return drawText(text, x, y, color, false)
+        return drawText(text, x, y, colour, false)
     }
 
-    private fun drawText(text: String?, x: Float, y: Float, color: Int, ignoreColor: Boolean): Int {
+    private fun drawText(text: String?, x: Float, y: Float, colour: Color, ignoreColor: Boolean, ): Int {
         if (text == null) {
             return 0
         }
@@ -71,16 +74,16 @@ class FontRenderer(font: Font) : Wrapper {
         GlStateManager.enableAlpha()
         GlStateManager.enableBlend()
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0)
-        GlStateManager.enableTexture2D()
         glEnable(GL_LINE_SMOOTH)
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
 
-        var currentColor = color
+        var currentColor = colour.rgb
+
         if (currentColor and -0x4000000 == 0) {
             currentColor = currentColor or -0x1000000
         }
 
-        val alpha = currentColor shr 24 and 0xFF
+        val alpha = (currentColor shr 24 and 0xFF).coerceAtLeast(5)
 
         if (text.contains("§")) {
             val parts = text.split("§".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
@@ -113,7 +116,7 @@ class FontRenderer(font: Font) : Wrapper {
                     16 -> randomCase = true
                     18 -> {}
                     21 -> {
-                        currentColor = color
+                        currentColor = colour.rgb
 
                         if (currentColor and -0x4000000 == 0) {
                             currentColor = currentColor or -0x1000000
@@ -125,15 +128,13 @@ class FontRenderer(font: Font) : Wrapper {
 
                 if (randomCase) {
                     currentFont.drawString(ColorUtils.randomMagicText(words), width, 0.0, currentColor)
-                }
-                else {
+                } else {
                     currentFont.drawString(words, width, 0.0, currentColor)
                 }
 
                 width += currentFont.getStringWidth(words).toDouble()
             }
-        }
-        else {
+        } else {
             defaultFont.drawString(text, 0.0, 0.0, currentColor)
         }
 
@@ -141,13 +142,12 @@ class FontRenderer(font: Font) : Wrapper {
         GlStateManager.disableBlend()
         GlStateManager.translate(-x.toDouble(), -y.toDouble(), 0.0)
 
-        return (x + getStringWidth(text).toFloat()).toInt()
+        return x.toInt()
     }
 
     fun getStringWidth(text: String): Int {
         if (text.contains("§")) {
-            val parts = text.split("§".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            val currentFont = defaultFont
+            val parts = text.split("§".toRegex()).toTypedArray()
             var width = 0
 
             for (index in parts.indices) {
@@ -158,12 +158,12 @@ class FontRenderer(font: Font) : Wrapper {
                 }
 
                 if (index == 0) {
-                    width += currentFont.getStringWidth(part)
+                    width += defaultFont.getStringWidth(part)
                     continue
                 }
 
                 val words = part.substring(1)
-                width += currentFont.getStringWidth(words)
+                width += defaultFont.getStringWidth(words)
             }
 
             return width / 2
@@ -218,8 +218,8 @@ class FontRenderer(font: Font) : Wrapper {
         fun getColorIndex(type: Char): Int {
             return when (type) {
                 '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> type.code - 48
-                'a', 'b', 'c', 'd', 'e', 'f' -> type.code - 97 + 10 //Why the math?
-                'k', 'l', 'm', 'n', 'o' -> type.code - 107 + 16
+                'a', 'b', 'c', 'd', 'e', 'f' -> type.code - 107
+                'k', 'l', 'm', 'n', 'o' -> type.code - 123
                 'r' -> 21
                 else -> -1
             }

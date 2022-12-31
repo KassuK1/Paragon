@@ -2,79 +2,79 @@ package com.paragon.impl.module.hud
 
 import com.paragon.impl.module.Category
 import com.paragon.impl.module.Module
-import com.paragon.util.render.RenderUtil.screenHeight
-import com.paragon.util.render.RenderUtil.screenWidth
+import com.paragon.impl.module.client.Editor
+import com.paragon.impl.ui.util.Click
+import com.paragon.util.isHovered
+import com.paragon.util.mc
+import com.paragon.util.roundToNearest
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.util.math.MathHelper
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 
 /**
- * @author Surge, SooStrator1136
+ * @author Surge
+ * @since 24/12/2022
  */
-@SideOnly(Side.CLIENT)
-abstract class HUDModule(name: String, description: String) : Module(name, Category.HUD, description) {
+abstract class HUDModule(name: String, description: String, val width: () -> Float, val height: () -> Float) : Module(name, Category.HUD, description) {
 
-    open var width = 50F
-    open var height = 50F
+    var x: Float = 50f
+    var y: Float = 50f
 
-    var x = 50F
-    var y = 50F
     private var lastX = 0F
     private var lastY = 0F
-    var isDragging = false
-        private set
 
-    init {
-        setVisible(false)
+    var dragging = false
+
+    abstract fun draw()
+
+    open fun dummy() {
+        draw()
     }
 
-    abstract fun render()
-
-    fun updateComponent(mouseX: Int, mouseY: Int) {
-        // Set X and Y
-        if (isDragging) {
-            val sr = ScaledResolution(minecraft)
-            val newX = MathHelper.clamp(mouseX - lastX, 1f, screenWidth)
-            val newY = MathHelper.clamp(mouseY - lastY, 1f, screenHeight)
-
-            println(sr.scaleFactor)
+    fun updatePosition(mouseX: Int, mouseY: Int) {
+        if (dragging) {
+            val sr = ScaledResolution(mc)
+            val newX = mouseX - lastX
+            val newY = mouseY - lastY
 
             x = newX
             y = newY
 
-            val centerX = newX + width / 2f
-            val centerY = newY + height / 2f
+            val centerX = newX + width.invoke() / 2f
+            val centerY = newY + height.invoke() / 2f
 
             if (centerX > sr.scaledWidth / 2f - 5 && centerX < sr.scaledWidth / 2f + 5) {
-                x = sr.scaledWidth / 2f - width / 2f
+                x = sr.scaledWidth / 2f - width.invoke() / 2f
             }
 
             if (centerY > sr.scaledHeight / 2f - 5 && centerY < sr.scaledHeight / 2f + 5) {
-                y = sr.scaledHeight / 2f - height / 2f
+                y = sr.scaledHeight / 2f - height.invoke() / 2f
             }
+
+            x = x.roundToNearest(Editor.snap.value).toFloat()
+            y = y.roundToNearest(Editor.snap.value).toFloat()
         }
     }
 
     fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-        if (isHovered(x, y, width, height, mouseX, mouseY)) {
-            if (mouseButton == 0) {
-                lastX = mouseX - x
-                lastY = mouseY - y
-                isDragging = true
-            }
-            else if (mouseButton == 1) {
-                if (isEnabled) {
-                    toggle()
-                    return true
+        if (isHovered(x, y, width.invoke(), height.invoke(), mouseX, mouseY)) {
+            when (Click.getClick(mouseButton)) {
+                Click.LEFT -> {
+                    lastX = mouseX - x
+                    lastY = mouseY - y
+                    dragging = true
                 }
+
+                Click.RIGHT -> {
+                    if (isEnabled) {
+                        toggle()
+                        return true
+                    }
+                }
+
+                else -> {}
             }
         }
-        return false
-    }
 
-    fun mouseReleased(mouseX: Int, mouseY: Int, mouseButton: Int) {
-        isDragging = false
+        return false
     }
 
 }

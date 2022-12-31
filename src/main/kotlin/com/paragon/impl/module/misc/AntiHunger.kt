@@ -7,6 +7,7 @@ import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.ICPacketPlayer
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import net.minecraft.network.play.client.CPacketEntityAction
 import net.minecraft.network.play.client.CPacketPlayer
 
@@ -26,27 +27,27 @@ object AntiHunger : Module("AntiHunger", Category.MISC, "Tries to remove huger l
     private var previousSprint = false
 
     override fun onEnable() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        if (minecraft.player.isSprinting) {
+        if (mc.player.isSprinting) {
             previousSprint = true
-            minecraft.player.connection.sendPacket(
-                CPacketEntityAction(minecraft.player, CPacketEntityAction.Action.STOP_SPRINTING)
+            mc.player.connection.sendPacket(
+                CPacketEntityAction(mc.player, CPacketEntityAction.Action.STOP_SPRINTING)
             )
         }
     }
 
     override fun onDisable() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         if (previousSprint) {
             previousSprint = false
-            minecraft.player.connection.sendPacket(
-                CPacketEntityAction(minecraft.player, CPacketEntityAction.Action.START_SPRINTING)
+            mc.player.connection.sendPacket(
+                CPacketEntityAction(mc.player, CPacketEntityAction.Action.START_SPRINTING)
             )
         }
     }
@@ -54,7 +55,7 @@ object AntiHunger : Module("AntiHunger", Category.MISC, "Tries to remove huger l
     @Listener
     fun onPacketSend(event: PostSend) {
         if (event.packet is CPacketPlayer) {
-            if (groundSpoof.value && !minecraft.player.isRiding && !minecraft.player.isElytraFlying) {
+            if (groundSpoof.value && !mc.player.isRiding && !mc.player.isElytraFlying) {
                 (event.packet as ICPacketPlayer).hookSetOnGround(true)
             }
         }

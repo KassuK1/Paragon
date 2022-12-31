@@ -2,8 +2,7 @@ package com.paragon.impl.managers
 
 import com.paragon.Paragon
 import com.paragon.impl.command.impl.*
-import com.paragon.impl.module.misc.Cryptic
-import com.paragon.util.Wrapper
+import com.paragon.util.mc
 import net.minecraft.util.text.TextComponentString
 import net.minecraft.util.text.TextFormatting.*
 import net.minecraftforge.client.event.ClientChatEvent
@@ -14,13 +13,22 @@ import java.util.*
 /**
  * @author Surge
  */
-class CommandManager : Wrapper {
+class CommandManager {
 
-    private val prefix = "$"
+    val prefix = "$"
     var lastCommand = ""
 
     val commands = arrayListOf(
-        ConfigCommand, CopySkinCommand, HelpCommand, OpenFolderCommand, SaveMapCommand, SocialCommand, SyntaxCommand, SizeCommand, NearestStronghold
+        ConfigCommand,
+        CopySkinCommand,
+        FriendCommand,
+        HelpCommand,
+        NearestStronghold,
+        OpenFolderCommand,
+        SaveMapCommand,
+        SettingCommand,
+        SyntaxCommand,
+        SizeCommand
     )
 
     val commonPrefixes = listOf("/", ".", "*", ";", ",") as MutableList<String>
@@ -30,32 +38,43 @@ class CommandManager : Wrapper {
         Paragon.INSTANCE.logger.info("Loaded Command Manager")
     }
 
-    fun handleCommands(message: String, fromConsole: Boolean) {
-        if (message.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray().isNotEmpty()) {
+    private fun handleCommands(message: String, fromConsole: Boolean) {
+        if (message.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.isNotEmpty()) {
             var commandFound = false
             val commandName = message.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+
             for (command in commands) {
                 if (command.name.equals(commandName, ignoreCase = true)) {
-                    command.whenCalled(message.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray().copyOfRange(1, message.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray().size), fromConsole)
+                    if (!command.call(
+                            message
+                                .split(" ".toRegex())
+                                .dropLastWhile { it.isEmpty() }
+                                .toTypedArray()
+                                .copyOfRange(1, message.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.size),
+                            fromConsole
+                        )
+                    ) {
+                        command.sendInvalidSyntaxMessage()
+                    }
+
                     lastCommand = prefix + message
                     commandFound = true
                     break
                 }
             }
+
             if (!commandFound) {
-                sendClientMessage(RED.toString() + "Command not found!", fromConsole)
+                sendClientMessage(RED.toString() + "Command not found!")
             }
         }
     }
 
-    fun sendClientMessage(message: String, fromConsole: Boolean) {
-        // Only send chat message if the message wasn't sent from the console
-        if (!fromConsole) {
-            minecraft.player.sendMessage(TextComponentString(LIGHT_PURPLE.toString() + "Paragon " + WHITE + "> " + message))
-        }
-
-        Paragon.INSTANCE.console.addLine(LIGHT_PURPLE.toString() + "Paragon " + WHITE + "> " + message)
-    }
+    /**
+     * Sends a client side chat message with client prefix.
+     */
+    fun sendClientMessage(message: String) = mc.player.sendMessage(
+        TextComponentString(LIGHT_PURPLE.toString() + "Paragon " + WHITE + "> " + message)
+    )
 
     @SubscribeEvent
     fun onChatMessage(event: ClientChatEvent) {
@@ -66,8 +85,17 @@ class CommandManager : Wrapper {
         }
     }
 
-    fun startsWithPrefix(message: String) = message.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].lowercase(Locale.getDefault()).startsWith(prefix.lowercase()) || commonPrefixes.contains(
-        message.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].lowercase(Locale.getDefault())
-    ) || message.startsWith("crypt") && Cryptic.isEnabled // WTF
+    fun startsWithPrefix(message: String): Boolean {
+        return message.split(" ".toRegex())
+            .dropLastWhile { it.isEmpty() }[0]
+            .lowercase(Locale.getDefault())
+            .startsWith(prefix.lowercase())
+                ||
+                commonPrefixes.contains(
+                    message.split(" ".toRegex())
+                        .dropLastWhile { it.isEmpty() }[0]
+                        .lowercase(Locale.getDefault())
+                )
+    }
 
 }

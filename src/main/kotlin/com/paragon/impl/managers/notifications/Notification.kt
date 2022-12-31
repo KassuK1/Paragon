@@ -1,47 +1,41 @@
 package com.paragon.impl.managers.notifications
 
-import com.paragon.util.render.font.FontUtil
-import com.paragon.impl.module.hud.impl.Notifications
+import com.paragon.util.mc
 import com.paragon.util.render.RenderUtil
+import com.paragon.util.render.font.FontUtil
 import me.surge.animation.Animation
 import me.surge.animation.Easing
+import net.minecraft.client.gui.ScaledResolution
+import java.awt.Color
 
 /**
  * @author Surge
  */
 class Notification(val message: String, val type: NotificationType) {
 
-    val animation: Animation = Animation({ 500f }, false, { Easing.EXPO_IN_OUT })
-    private var started = false
-    private var reachedFirst = false
-    private var renderTicks = 0
+    val animation: Animation = Animation({ 500f }, false, { Easing.BACK_IN_OUT })
+    val progress: Animation = Animation({ 800f }, false, { Easing.LINEAR })
 
     fun render(y: Float) {
-        if (!started) {
-            animation.state = true
-            started = true
+        animation.state = if (!progress.state) {
+            true
+        } else {
+            progress.getAnimationFactor() != 1.0
         }
 
-        val width = FontUtil.getStringWidth(message) + 10
-        val x = Notifications.x
+        if (animation.getAnimationFactor() == 1.0) {
+            progress.state = true
+        }
 
-        RenderUtil.pushScissor(Notifications.x + (150 - 150) * animation.getAnimationFactor(), y.toDouble(), 300 * animation.getAnimationFactor(), 45.0)
-        RenderUtil.drawRect(x + 150 - width / 2f, y, width, 30f, -0x70000000)
-        FontUtil.renderCenteredString(message, x + 150, y + 15f, -1, true)
-        RenderUtil.drawRect(x + 150 - width / 2f, y, width, 1f, type.colour)
-        RenderUtil.popScissor()
+        val scaledResolution = ScaledResolution(mc)
 
-        if (animation.getAnimationFactor() == 1.0 && !reachedFirst) {
-            reachedFirst = true
-        }
-        if (reachedFirst) {
-            renderTicks++
-        }
-        if (renderTicks == 300) {
-            animation.state = false
-        }
+        val width = (FontUtil.getStringWidth(message) + 12f).coerceAtLeast(75f)
+        val x = scaledResolution.scaledWidth - ((width + 10) * animation.getAnimationFactor()).toFloat()
+
+        RenderUtil.drawRect(x, y, width, 20f, Color(0, 0, 0, 150))
+
+        FontUtil.drawStringWithShadow(message, x + 6, y + 6, Color.WHITE)
+        RenderUtil.drawRect(x, y + 19f, width * progress.getAnimationFactor().toFloat(), 1f, type.colour)
     }
-
-    fun hasFinishedAnimating() = animation.getAnimationFactor() == 0.0 && reachedFirst
 
 }

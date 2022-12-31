@@ -1,7 +1,7 @@
 package com.paragon.impl.ui.configuration.discord.category
 
 import com.paragon.Paragon
-import com.paragon.impl.ui.configuration.discord.GuiDiscord
+import com.paragon.impl.ui.configuration.discord.DiscordGUI
 import com.paragon.impl.ui.configuration.discord.IRenderable
 import com.paragon.impl.ui.configuration.discord.module.DiscordModule
 import com.paragon.impl.ui.configuration.discord.module.ModuleBar
@@ -16,7 +16,7 @@ import org.lwjgl.util.Rectangle
 object CategoryBar : IRenderable {
 
     val rect = Rectangle(
-        GuiDiscord.baseRect.x, GuiDiscord.baseRect.y, GuiDiscord.baseRect.x + (GuiDiscord.baseRect.width / 10), GuiDiscord.baseRect.height
+        DiscordGUI.baseRect.x, DiscordGUI.baseRect.y, DiscordGUI.baseRect.x + (DiscordGUI.baseRect.width / 10), DiscordGUI.baseRect.height
     )
     private val categories = arrayOfNulls<DiscordCategory>(Category.values().size)
 
@@ -29,7 +29,7 @@ object CategoryBar : IRenderable {
 
     override fun render(mouseX: Int, mouseY: Int) {
         Gui.drawRect(
-            rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, GuiDiscord.categoryBarBackground.rgb
+            rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, DiscordGUI.categoryBarBackground.rgb
         )
 
         val catAmount = categories.size
@@ -46,7 +46,7 @@ object CategoryBar : IRenderable {
         }
 
         rect.setBounds(
-            GuiDiscord.baseRect.x, GuiDiscord.baseRect.y, catHeight, GuiDiscord.baseRect.height
+            DiscordGUI.baseRect.x, DiscordGUI.baseRect.y, catHeight, DiscordGUI.baseRect.height
         )
     }
 

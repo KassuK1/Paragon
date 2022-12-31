@@ -7,6 +7,7 @@ import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IMinecraft
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import com.paragon.util.player.InventoryUtil
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.CPacketPlayer
@@ -41,22 +42,22 @@ object FastUse : Module("FastUse", Category.MISC, "Allows you to use items quick
     private val random = Random()
 
     override fun onTick() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         // Check we want to set the delay timer to 0
         if (xp.value && InventoryUtil.isHolding(Items.EXPERIENCE_BOTTLE) || crystals.value && InventoryUtil.isHolding(Items.END_CRYSTAL)) {
             if (randomPause.value && random.nextInt(randomChance.value.toInt()) == 1) {
-                (minecraft as IMinecraft).hookSetRightClickDelayTimer(4)
+                (mc as IMinecraft).hookSetRightClickDelayTimer(4)
                 return
             }
 
             if (InventoryUtil.isHolding(Items.EXPERIENCE_BOTTLE)) {
-                minecraft.player.xpCooldown = 0
+                mc.player.xpCooldown = 0
             }
 
-            (minecraft as IMinecraft).hookSetRightClickDelayTimer(0)
+            (mc as IMinecraft).hookSetRightClickDelayTimer(0)
         }
     }
 
@@ -67,9 +68,9 @@ object FastUse : Module("FastUse", Category.MISC, "Allows you to use items quick
         }
 
         // Send rotation packet. We aren't using the rotation manager as it doesn't immediately rotate the player
-        minecraft.player.connection.sendPacket(
+        mc.player.connection.sendPacket(
             CPacketPlayer.Rotation(
-                minecraft.player.rotationYaw, 90f, minecraft.player.onGround
+                mc.player.rotationYaw, 90f, mc.player.onGround
             )
         )
     }

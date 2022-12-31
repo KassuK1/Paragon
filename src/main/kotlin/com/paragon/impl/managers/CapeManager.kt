@@ -2,7 +2,7 @@ package com.paragon.impl.managers
 
 import com.paragon.Paragon
 import com.paragon.util.mc
-import com.paragon.util.system.ResourceUtil
+import com.paragon.util.system.TextureUtil
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
@@ -16,7 +16,7 @@ class CapeManager {
     /**
      * Checks if a player has a cape using the players username
      */
-    fun isCaped(username: String) = capedPlayers.containsKey(username) || FMLLaunchHandler.isDeobfuscatedEnvironment()
+    fun isCaped(username: String) = capedPlayers.containsKey(username)
 
     /**
      * Gets the cape for a given [username]
@@ -26,20 +26,19 @@ class CapeManager {
     init {
         runCatching {
             runBlocking {
-                String(
-                    ResourceUtil.client.get("https://ParagonBot.wolfsurge.repl.co/capes").readBytes()
-                ).split(System.lineSeparator()).forEach {
+                TextureUtil.client.get("https://ParagonBot.wolfsurge.repl.co/capes").bodyAsText().split(',').forEach {
                     val data = it.split(":")
                     capedPlayers[data[0]] = Cape.valueOf(data[1].uppercase(Locale.getDefault()))
                 }
             }
-        }.onFailure {
-            Paragon.INSTANCE.logger.error("Couldn't fetch capes! Looks like the host is down.")
         }.onSuccess {
             Paragon.INSTANCE.logger.info("Loaded capes!")
+        }.onFailure {
+            Paragon.INSTANCE.logger.error("Couldn't fetch capes! Looks like the host is down.")
+            it.printStackTrace()
         }
 
-        //Give a cape to the player if we are in a dev env
+        // Give a cape to the player if we are in a dev env
         if (FMLLaunchHandler.isDeobfuscatedEnvironment()) {
             capedPlayers[mc.session.username] = Cape.BASED
         }

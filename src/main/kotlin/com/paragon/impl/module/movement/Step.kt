@@ -8,6 +8,7 @@ import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IMinecraft
 import com.paragon.mixins.accessor.ITimer
 import com.paragon.util.anyNull
+import com.paragon.util.mc
 import com.paragon.util.string.StringUtil.getFormattedText
 import net.minecraft.network.play.client.CPacketPlayer
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent
@@ -41,47 +42,47 @@ object Step : Module("Step", Category.MOVEMENT, "Lets you instantly step up bloc
     private var timer = false
 
     override fun onDisable() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         // Set step height to normal
-        minecraft.player.stepHeight = 0.6f
+        mc.player.stepHeight = 0.6f
 
         // reset our tickLength to 50.0f (1 timer speed)
-        ((minecraft as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50.0f)
+        ((mc as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50.0f)
         timer = false
     }
 
     @SubscribeEvent
     fun onTick(event: ClientTickEvent?) {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         // Set step height
-        minecraft.player.stepHeight = stepHeight.value
+        mc.player.stepHeight = stepHeight.value
     }
 
     @SubscribeEvent
     fun onUpdate(event: LivingUpdateEvent) {
-        if (event.entityLiving == minecraft.player) {
+        if (event.entityLiving == mc.player) {
 
             // if we have used timer before and we are on ground after stepping, reset our timer
-            if (timer && minecraft.player.onGround) {
+            if (timer && mc.player.onGround) {
                 timer = false
-                ((minecraft as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50.0f)
+                ((mc as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50.0f)
             }
         }
     }
 
     @Listener
     fun onStep(event: StepEvent) {
-        if (mode.value == Mode.NCP && event.entity == minecraft.player && !minecraft.player.capabilities.isFlying) {
-            val height: Double = event.bB.minY - minecraft.player.posY
+        if (mode.value == Mode.NCP && event.entity == mc.player && !mc.player.capabilities.isFlying) {
+            val height: Double = event.bB.minY - mc.player.posY
 
             // don't step if there are any flagging conditions
-            if (height > stepHeight.value || !minecraft.player.onGround || minecraft.player.isInWater || minecraft.player.isInLava) {
+            if (height > stepHeight.value || !mc.player.onGround || mc.player.isInWater || mc.player.isInLava) {
                 return
             }
 
@@ -94,15 +95,15 @@ object Step : Module("Step", Category.MOVEMENT, "Lets you instantly step up bloc
 
             if (useTimer.value) {
                 // set our timer dynamically based off of the amount of offsets we are using
-                ((minecraft as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50.0f / (1.0f / (offsets.size + 1.0f)))
+                ((mc as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50.0f / (1.0f / (offsets.size + 1.0f)))
                 timer = true
             }
 
             // Send offsets - this simulates a fake jump
             for (offset in offsets) {
-                minecraft.player.connection.sendPacket(
+                mc.player.connection.sendPacket(
                     CPacketPlayer.Position(
-                        minecraft.player.posX, minecraft.player.posY + offset, minecraft.player.posZ, false
+                        mc.player.posX, mc.player.posY + offset, mc.player.posZ, false
                     )
                 )
             }

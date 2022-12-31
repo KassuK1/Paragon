@@ -1,11 +1,13 @@
 package com.paragon.impl.module.render
 
-import com.paragon.impl.module.Module
-import com.paragon.impl.setting.Setting
-import com.paragon.util.player.PlayerUtil
-import com.paragon.util.render.ColourUtil.setColour
 import com.paragon.impl.module.Category
+import com.paragon.impl.module.Module
+import com.paragon.impl.module.annotation.Aliases
+import com.paragon.impl.setting.Setting
 import com.paragon.util.anyNull
+import com.paragon.util.mc
+import com.paragon.util.player.PlayerUtil
+import com.paragon.util.render.ColourUtil.glColour
 import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -14,27 +16,14 @@ import java.util.*
 /**
  * @author Surge
  */
+@Aliases(["Trails"])
 object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, "Draws a trail behind you") {
 
-    private val infinite = Setting(
-        "Infinite", false
-    ) describedBy "Breadcrumbs last forever"
-
-    private val lifespanValue = Setting(
-        "Lifespan", 100f, 1f, 1000f, 1f
-    ) describedBy "The lifespan of the positions in ticks" visibleWhen { !infinite.value }
-
-    private val lineWidth = Setting(
-        "LineWidth", 1f, 0.1f, 5f, 0.1f
-    ) describedBy "The width of the lines"
-
-    private val colour = Setting(
-        "Colour", Color(185, 17, 255)
-    ) describedBy "The colour of the breadcrumbs"
-
-    private val rainbow = Setting(
-        "Rainbow", true
-    ) describedBy "Makes the trail a rainbow"
+    private val infinite = Setting("Infinite", false) describedBy "Breadcrumbs last forever"
+    private val lifespanValue = Setting("Lifespan", 100f, 1f, 1000f, 1f) describedBy "The lifespan of the positions in ticks" visibleWhen { !infinite.value }
+    private val lineWidth = Setting("LineWidth", 1f, 0.1f, 5f, 0.1f) describedBy "The width of the lines"
+    private val colour = Setting("Colour", Color(185, 17, 255)) describedBy "The colour of the breadcrumbs"
+    private val rainbow = Setting("Rainbow", true) describedBy "Makes the trail a rainbow"
 
     private val positions = LinkedList<Position>()
     private var colourHue = 0
@@ -45,7 +34,7 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, "Draws a trail behin
     }
 
     override fun onTick() {
-        if (minecraft.anyNull || minecraft.player.ticksExisted <= 20) {
+        if (mc.anyNull || mc.player.ticksExisted <= 20) {
             // We may have just loaded into a world, so we need to clear the positions
             positions.clear()
             return
@@ -53,10 +42,20 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, "Draws a trail behin
 
         // Create position
         val pos = Position(
-            Vec3d(minecraft.player.lastTickPosX, minecraft.player.lastTickPosY, minecraft.player.lastTickPosZ), Color(Color.HSBtoRGB(colourHue / 360f, 1f, 1f))
+            Vec3d(
+                mc.player.lastTickPosX,
+                mc.player.lastTickPosY,
+                mc.player.lastTickPosZ
+            ),
+            Color(
+                Color.HSBtoRGB(
+                    colourHue / 360f,
+                    1f, 1f
+                )
+            )
         )
 
-        if (PlayerUtil.isMoving || minecraft.player.posY != minecraft.player.lastTickPosY) {
+        if (PlayerUtil.isMoving || mc.player.posY != mc.player.lastTickPosY) {
             colourHue++
         }
 
@@ -82,15 +81,16 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, "Draws a trail behin
         glLineWidth(lineWidth.value)
 
         // Disable lighting
-        minecraft.entityRenderer.disableLightmap()
+        mc.entityRenderer.disableLightmap()
 
         glBegin(GL_LINE_STRIP)
-        for (pos in positions) {
-            val renderPosX = minecraft.renderManager.viewerPosX
-            val renderPosY = minecraft.renderManager.viewerPosY
-            val renderPosZ = minecraft.renderManager.viewerPosZ
 
-            setColour(if (rainbow.value) pos.colour.rgb else colour.value.rgb)
+        for (pos in positions) {
+            val renderPosX = mc.renderManager.viewerPosX
+            val renderPosY = mc.renderManager.viewerPosY
+            val renderPosZ = mc.renderManager.viewerPosZ
+
+            (if (rainbow.value) pos.colour else colour.value).glColour()
 
             glVertex3d(pos.position.x - renderPosX, pos.position.y - renderPosY, pos.position.z - renderPosZ)
         }

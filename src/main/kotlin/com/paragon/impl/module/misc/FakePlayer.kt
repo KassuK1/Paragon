@@ -9,6 +9,7 @@ import com.paragon.bus.listener.Listener
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
 import com.paragon.util.combat.CrystalUtil
+import com.paragon.util.mc
 import com.paragon.util.player.EntityFakePlayer
 import net.minecraft.entity.item.EntityEnderCrystal
 import net.minecraft.network.play.server.SPacketDestroyEntities
@@ -23,17 +24,17 @@ object FakePlayer : Module("FakePlayer", Category.MISC, "Spawns a fake client si
     private var fakePlayer: EntityFakePlayer? = null
 
     override fun onEnable() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
         // Create new fake player
-        fakePlayer = EntityFakePlayer(minecraft.world)
+        fakePlayer = EntityFakePlayer(mc.world)
     }
 
     override fun onDisable() {
         // If we can despawn the player, do so
-        if (fakePlayer != null && minecraft.world != null && minecraft.world.loadedEntityList.contains(fakePlayer)) {
+        if (fakePlayer != null && mc.world != null && mc.world.loadedEntityList.contains(fakePlayer)) {
             (fakePlayer ?: return).despawn()
         }
     }
@@ -42,13 +43,18 @@ object FakePlayer : Module("FakePlayer", Category.MISC, "Spawns a fake client si
     fun onPacket(event: PacketEvent.PreReceive) {
         if (event.packet is SPacketDestroyEntities && popAble.value) {
             event.packet.entityIDs.forEach {
-                val entity = minecraft.world.getEntityByID(it)
+                val entity = mc.world.getEntityByID(it)
 
                 if (entity !is EntityEnderCrystal) {
                     return@forEach
                 }
 
+                if (fakePlayer == null) {
+                    return
+                }
+
                 val damage = CrystalUtil.calculateDamage(entity.positionVector, fakePlayer ?: return@forEach)
+
                 if (damage > 0) {
                     if ((fakePlayer ?: return@forEach).health - damage > 0) {
                         (fakePlayer ?: return@forEach).health -= damage

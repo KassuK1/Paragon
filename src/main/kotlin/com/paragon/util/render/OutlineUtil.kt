@@ -1,6 +1,6 @@
 package com.paragon.util.render
 
-import com.paragon.util.Wrapper
+import com.paragon.util.mc
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.OpenGlHelper
 import net.minecraft.client.shader.Framebuffer
@@ -12,7 +12,7 @@ import java.awt.Color
 /**
  * @author Hexeption
  */
-object OutlineUtil : Wrapper {
+object OutlineUtil {
 
     @JvmStatic
     fun renderOne(lineWidth: Float) {
@@ -75,7 +75,10 @@ object OutlineUtil : Wrapper {
 
     private fun setColor(c: Color) {
         glColor4d(
-            (c.red / 255f).toDouble(), (c.green / 255f).toDouble(), (c.blue / 255f).toDouble(), (c.alpha / 255f).toDouble()
+            (c.red / 255f).toDouble(),
+            (c.green / 255f).toDouble(),
+            (c.blue / 255f).toDouble(),
+            (c.alpha / 255f).toDouble()
         )
     }
 
@@ -114,21 +117,30 @@ object OutlineUtil : Wrapper {
         // Args: Target (GL_RENDERBUFFER_EXT), Extension (GL_DEPTH_STENCIL_EXT),
         // Width, Height
         EXTFramebufferObject.glRenderbufferStorageEXT(
-            EXTFramebufferObject.GL_RENDERBUFFER_EXT, EXTPackedDepthStencil.GL_DEPTH_STENCIL_EXT, minecraft.displayWidth, minecraft.displayHeight
+            EXTFramebufferObject.GL_RENDERBUFFER_EXT,
+            EXTPackedDepthStencil.GL_DEPTH_STENCIL_EXT,
+            mc.displayWidth,
+            mc.displayHeight
         )
 
         // Adds the stencil attachment
         // Args: Target (GL_FRAMEBUFFER_EXT), Attachment
         // (GL_STENCIL_ATTACHMENT_EXT), Target (GL_RENDERBUFFER_EXT), ID
         EXTFramebufferObject.glFramebufferRenderbufferEXT(
-            EXTFramebufferObject.GL_FRAMEBUFFER_EXT, EXTFramebufferObject.GL_STENCIL_ATTACHMENT_EXT, EXTFramebufferObject.GL_RENDERBUFFER_EXT, stencilDepthBufferId
+            EXTFramebufferObject.GL_FRAMEBUFFER_EXT,
+            EXTFramebufferObject.GL_STENCIL_ATTACHMENT_EXT,
+            EXTFramebufferObject.GL_RENDERBUFFER_EXT,
+            stencilDepthBufferId
         )
 
         // Adds the depth attachment
         // Args: Target (GL_FRAMEBUFFER_EXT), Attachment
         // (GL_DEPTH_ATTACHMENT_EXT), Target (GL_RENDERBUFFER_EXT), ID
         EXTFramebufferObject.glFramebufferRenderbufferEXT(
-            EXTFramebufferObject.GL_FRAMEBUFFER_EXT, EXTFramebufferObject.GL_DEPTH_ATTACHMENT_EXT, EXTFramebufferObject.GL_RENDERBUFFER_EXT, stencilDepthBufferId
+            EXTFramebufferObject.GL_FRAMEBUFFER_EXT,
+            EXTFramebufferObject.GL_DEPTH_ATTACHMENT_EXT,
+            EXTFramebufferObject.GL_RENDERBUFFER_EXT,
+            stencilDepthBufferId
         )
     }
 }

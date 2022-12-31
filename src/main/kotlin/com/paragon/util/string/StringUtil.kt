@@ -6,43 +6,43 @@ package com.paragon.util.string
  */
 object StringUtil {
 
+    /**
+     * Formats an enum name (in SCREAMING_SNAKE_CASE) to UpperCamelCase.
+     *
+     * @return the converted name.
+     */
     @JvmStatic
-    fun getFormattedText(enumIn: Enum<*>): String {
-        val text = enumIn.name
-        val formatted = StringBuilder(text.length)
-        var isFirst = true
-        for (c in text.toCharArray()) {
-            if (c == '_') {
-                isFirst = true
-                continue
-            }
-            if (isFirst) {
-                formatted.append(c.toString().uppercase())
-                isFirst = false
-            }
-            else {
-                formatted.append(c.toString().lowercase())
+    fun getFormattedText(enumIn: Enum<*>) = enumIn.name.let { text ->
+        buildString(text.length) {
+            var isFirst = true
+            text.forEach {
+                if (it == '_') {
+                    isFirst = true
+                    return@forEach
+                }
+
+                if (isFirst) {
+                    append(it.toString().uppercase())
+                    isFirst = false
+                } else {
+                    append(it.toString().lowercase())
+                }
             }
         }
-        return formatted.toString()
     }
 
     @JvmStatic
-    fun wrap(str: String, length: Int): String {
-        val result = StringBuilder(str.length)
+    fun wrap(str: String, length: Int) = buildString {
         var lastDeliminatorPosition = 0
 
-        for (token in str.split(" ")) {
-            if (result.length - lastDeliminatorPosition + token.length > length) {
-                result.append(System.lineSeparator()).append(token)
-                lastDeliminatorPosition = result.length + 1
-            }
-            else {
-                result.append(if (result.isEmpty()) "" else " ").append(token)
+        str.split(" ").forEach {
+            if (this.length - lastDeliminatorPosition + it.length > length) {
+                append(System.lineSeparator()).append(it)
+                lastDeliminatorPosition = this.length + 1
+            } else {
+                append(if (this.isEmpty()) "" else " ").append(it)
             }
         }
-
-        return result.toString()
     }
 
 }

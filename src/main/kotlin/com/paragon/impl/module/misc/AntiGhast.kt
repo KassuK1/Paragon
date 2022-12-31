@@ -6,6 +6,7 @@ import com.paragon.impl.managers.rotation.Rotate
 import com.paragon.impl.module.Category
 import com.paragon.util.anyNull
 import com.paragon.util.calculations.Timer
+import com.paragon.util.mc
 import com.paragon.util.player.RotationUtil
 import net.minecraft.entity.projectile.EntityFireball
 import net.minecraft.network.play.client.CPacketAnimation
@@ -32,13 +33,13 @@ object AntiGhast : Module("AntiGhast", Category.MISC, "Keep yourself save (kys) 
     private val timer = Timer()
 
     override fun onTick() {
-        if (!timer.hasMSPassed(delay.value.toDouble()) || minecraft.anyNull) {
+        if (!timer.hasMSPassed(delay.value.toDouble()) || mc.anyNull) {
             return
         }
 
-        val fireBalls = minecraft.world.loadedEntityList.filterIsInstance<EntityFireball>().filter {
+        val fireBalls = mc.world.loadedEntityList.filterIsInstance<EntityFireball>().filter {
             it.getDistance(
-                minecraft.player.posX, minecraft.player.posY + minecraft.player.getEyeHeight(), minecraft.player.posZ
+                mc.player.posX, mc.player.posY + mc.player.getEyeHeight(), mc.player.posZ
             ) <= range.value
         }
         if (fireBalls.isEmpty()) {
@@ -47,17 +48,17 @@ object AntiGhast : Module("AntiGhast", Category.MISC, "Keep yourself save (kys) 
 
         val target = fireBalls.sortedBy {
             it.getDistanceSq(
-                minecraft.player.posX, minecraft.player.posY + minecraft.player.getEyeHeight(), minecraft.player.posZ
+                mc.player.posX, mc.player.posY + mc.player.getEyeHeight(), mc.player.posZ
             )
         }[0]
 
         RotationUtil.rotate(RotationUtil.getRotationToVec3d(target.positionVector), rotation.value)
         if (hitType.value == AttackType.NORMAL) {
-            minecraft.playerController.attackEntity(minecraft.player, target)
+            mc.playerController.attackEntity(mc.player, target)
         }
         else {
-            minecraft.connection?.sendPacket(CPacketUseEntity(target))
-            minecraft.connection?.sendPacket(CPacketAnimation(EnumHand.MAIN_HAND))
+            mc.connection?.sendPacket(CPacketUseEntity(target))
+            mc.connection?.sendPacket(CPacketAnimation(EnumHand.MAIN_HAND))
         }
     }
 

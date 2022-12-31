@@ -1,14 +1,15 @@
 package com.paragon.impl.module.render
 
+import com.paragon.impl.module.Category
 import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
-import com.paragon.util.render.ColourUtil.integrateAlpha
-import com.paragon.util.render.ColourUtil.setColour
-import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IMinecraft
 import com.paragon.mixins.accessor.IRenderManager
 import com.paragon.util.anyNull
 import com.paragon.util.entity.EntityUtil
+import com.paragon.util.mc
+import com.paragon.util.render.ColourUtil.glColour
+import com.paragon.util.render.ColourUtil.integrateAlpha
 import com.paragon.util.render.builder.BoxRenderMode
 import com.paragon.util.render.builder.RenderBuilder
 import net.minecraft.item.*
@@ -72,31 +73,33 @@ object Trajectories : Module("Trajectories", Category.RENDER, "Shows where proje
     ) describedBy "Draw the trajectory of splash potions"
 
     override fun onRender3D() {
-        if (minecraft.anyNull) {
+        if (mc.anyNull) {
             return
         }
 
-        val stack = minecraft.player.heldItemMainhand
+        val stack = mc.player.heldItemMainhand
 
         // Check the item we are holding is a projectile (or a bow) and that projectile is enabled
         if (stack.item is ItemBow && bow.value || stack.item is ItemSnowball && snowball.value || stack.item is ItemEgg && egg.value || stack.item is ItemSplashPotion && potion.value || stack.item is ItemExpBottle && exp.value) {
             // If we are holding a bow, make sure we are charging
-            if (stack.item is ItemBow && !minecraft.player.isHandActive) {
+            if (stack.item is ItemBow && !mc.player.isHandActive) {
                 return
             }
 
             // Original arrow position
             var position = Vec3d(
-                minecraft.player.lastTickPosX + (minecraft.player.posX - minecraft.player.lastTickPosX) * ((minecraft as IMinecraft).hookGetTimer() ?: return).renderPartialTicks - cos(
-                    Math.toRadians(minecraft.player.rotationYaw.toDouble()).toFloat().toDouble()
-                ) * 0.16f, minecraft.player.lastTickPosY + (minecraft.player.posY - minecraft.player.lastTickPosY) * ((minecraft as IMinecraft).hookGetTimer() ?: return).renderPartialTicks + minecraft.player.getEyeHeight() - 0.15, minecraft.player.lastTickPosZ + (minecraft.player.posZ - minecraft.player.lastTickPosZ) * ((minecraft as IMinecraft).hookGetTimer() ?: return).renderPartialTicks - sin(
-                    Math.toRadians(minecraft.player.rotationYaw.toDouble()).toFloat().toDouble()
+                mc.player.lastTickPosX + (mc.player.posX - mc.player.lastTickPosX) * ((mc as IMinecraft).hookGetTimer() ?: return).renderPartialTicks - cos(
+                    Math.toRadians(mc.player.rotationYaw.toDouble()).toFloat().toDouble()
+                ) * 0.16f, mc.player.lastTickPosY + (mc.player.posY - mc.player.lastTickPosY) * ((mc as IMinecraft).hookGetTimer() ?: return).renderPartialTicks + mc.player.getEyeHeight() - 0.15, mc.player.lastTickPosZ + (mc.player.posZ - mc.player.lastTickPosZ) * ((mc as IMinecraft).hookGetTimer() ?: return).renderPartialTicks - sin(
+                    Math.toRadians(mc.player.rotationYaw.toDouble()).toFloat().toDouble()
                 ) * 0.16f
             )
 
             // Original arrow velocity
             var velocity = Vec3d(
-                -sin(Math.toRadians(minecraft.player.rotationYaw.toDouble())) * cos(Math.toRadians(minecraft.player.rotationPitch.toDouble())) * if (stack.item is ItemBow) 1.0f else 0.4f, -sin(Math.toRadians(minecraft.player.rotationPitch.toDouble())) * if (stack.item is ItemBow) 1.0f else 0.4f, cos(Math.toRadians(minecraft.player.rotationYaw.toDouble())) * cos(Math.toRadians(minecraft.player.rotationPitch.toDouble())) * if (stack.item is ItemBow) 1.0f else 0.4f
+                -sin(Math.toRadians(mc.player.rotationYaw.toDouble())) * cos(Math.toRadians(mc.player.rotationPitch.toDouble())) * if (stack.item is ItemBow) 1.0f else 0.4f,
+                -sin(Math.toRadians(mc.player.rotationPitch.toDouble())) * if (stack.item is ItemBow) 1.0f else 0.4f,
+                cos(Math.toRadians(mc.player.rotationYaw.toDouble())) * cos(Math.toRadians(mc.player.rotationPitch.toDouble())) * if (stack.item is ItemBow) 1.0f else 0.4f
             )
 
             // Motion factor
@@ -109,7 +112,7 @@ object Trajectories : Module("Trajectories", Category.RENDER, "Shows where proje
             velocity = if (stack.item is ItemBow) {
                 // Get the charge power
                 val power = MathHelper.clamp(
-                    ((72000 - minecraft.player.itemInUseCount) / 20.0f * ((72000 - minecraft.player.itemInUseCount) / 20.0f) + (72000 - minecraft.player.itemInUseCount) / 20.0f * 2.0f) / 3.0f, 0f, 1f
+                    ((72000 - mc.player.itemInUseCount) / 20.0f * ((72000 - mc.player.itemInUseCount) / 20.0f) + (72000 - mc.player.itemInUseCount) / 20.0f * 2.0f) / 3.0f, 0f, 1f
                 ) * 3
 
                 // Set velocity
@@ -132,14 +135,18 @@ object Trajectories : Module("Trajectories", Category.RENDER, "Shows where proje
 
                 // Set line width
                 glLineWidth(lineWidth.value)
-                setColour(lineColour.value.rgb)
+
+                lineColour.value.glColour()
+
                 glBegin(GL_LINE_STRIP)
 
                 // Add vertices to the line whilst we haven't hit a target
                 for (i in 0..999) {
                     // Add vertex
                     glVertex3d(
-                        position.x - (minecraft.renderManager as IRenderManager).hookGetRenderPosX(), position.y - (minecraft.renderManager as IRenderManager).hookGetRenderPosY(), position.z - (minecraft.renderManager as IRenderManager).hookGetRenderPosZ()
+                        position.x - (mc.renderManager as IRenderManager).hookGetRenderPosX(),
+                        position.y - (mc.renderManager as IRenderManager).hookGetRenderPosY(),
+                        position.z - (mc.renderManager as IRenderManager).hookGetRenderPosZ()
                     )
 
                     // Move position
@@ -152,9 +159,9 @@ object Trajectories : Module("Trajectories", Category.RENDER, "Shows where proje
                     )
 
                     // Check if we hit a target
-                    val result = minecraft.world.rayTraceBlocks(
-                        EntityUtil.getInterpolatedPosition(minecraft.player).add(
-                            Vec3d(0.0, minecraft.player.getEyeHeight().toDouble(), 0.0)
+                    val result = mc.world.rayTraceBlocks(
+                        EntityUtil.getInterpolatedPosition(mc.player).add(
+                            Vec3d(0.0, mc.player.getEyeHeight().toDouble(), 0.0)
                         ), Vec3d(position.x, position.y, position.z)
                     )
                     if (result != null) {
@@ -178,7 +185,12 @@ object Trajectories : Module("Trajectories", Category.RENDER, "Shows where proje
             if (box.value) {
                 // Get highlight bb
                 val bb = AxisAlignedBB(
-                    position.x - (minecraft.renderManager as IRenderManager).hookGetRenderPosX() - 0.25, position.y - (minecraft.renderManager as IRenderManager).hookGetRenderPosY() - 0.25, position.z - (minecraft.renderManager as IRenderManager).hookGetRenderPosZ() - 0.25, position.x - (minecraft.renderManager as IRenderManager).hookGetRenderPosX() + 0.25, position.y - (minecraft.renderManager as IRenderManager).hookGetRenderPosY() + 0.25, position.z - (minecraft.renderManager as IRenderManager).hookGetRenderPosZ() + 0.25
+                    position.x - (mc.renderManager as IRenderManager).hookGetRenderPosX() - 0.25,
+                    position.y - (mc.renderManager as IRenderManager).hookGetRenderPosY() - 0.25,
+                    position.z - (mc.renderManager as IRenderManager).hookGetRenderPosZ() - 0.25,
+                    position.x - (mc.renderManager as IRenderManager).hookGetRenderPosX() + 0.25,
+                    position.y - (mc.renderManager as IRenderManager).hookGetRenderPosY() + 0.25,
+                    position.z - (mc.renderManager as IRenderManager).hookGetRenderPosZ() + 0.25
                 )
 
                 // Draw filled box

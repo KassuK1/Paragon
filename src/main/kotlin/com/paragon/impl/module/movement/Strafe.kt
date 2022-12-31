@@ -5,11 +5,13 @@ import com.paragon.impl.module.Module
 import com.paragon.impl.setting.Setting
 import com.paragon.util.player.PlayerUtil
 import com.paragon.bus.listener.Listener
+import com.paragon.impl.module.annotation.Aliases
 import com.paragon.impl.module.Category
 import com.paragon.mixins.accessor.IMinecraft
 import com.paragon.mixins.accessor.ITimer
 import com.paragon.util.anyNull
 import com.paragon.util.calculations.Timer
+import com.paragon.util.mc
 import net.minecraft.util.math.Vec3d
 import kotlin.math.max
 
@@ -17,6 +19,7 @@ import kotlin.math.max
  * @author Surge
  * @since 15/07/22
  */
+@Aliases(["Speed"])
 object Strafe : Module("Strafe", Category.MOVEMENT, "Increases your movement speed") {
 
     private val timerSpeed = Setting(
@@ -46,7 +49,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT, "Increases your movement spe
     override fun onEnable() {
         state = State.SLOW
 
-        if (!minecraft.anyNull) {
+        if (!mc.anyNull) {
             speed = PlayerUtil.baseMoveSpeed
         }
     }
@@ -57,7 +60,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT, "Increases your movement spe
 
     @Listener
     fun onMove(event: PlayerMoveEvent) {
-        if (minecraft.player.ticksExisted < 1) {
+        if (mc.player.ticksExisted < 1) {
             speed = PlayerUtil.baseMoveSpeed
         }
 
@@ -67,12 +70,12 @@ object Strafe : Module("Strafe", Category.MOVEMENT, "Increases your movement spe
             // Make sure we are moving
             if (PlayerUtil.isMoving) {
                 // Check on ground state and whether the delay has passed
-                if (minecraft.player.onGround && timer.hasMSPassed(delay.value)) {
+                if (mc.player.onGround && timer.hasMSPassed(delay.value)) {
                     // Increase timer speed
                     setTimerSpeed(timerSpeed.value)
 
                     // Simulate a jump, but with 0.41 instead of 0.42 as it seems to bypass better?
-                    event.y = ((0.41f).toFloat().also { minecraft.player.motionY = it.toDouble() }).toDouble()
+                    event.y = ((0.41f).toFloat().also { mc.player.motionY = it.toDouble() }).toDouble()
 
                     // Set speed
                     speed = PlayerUtil.baseMoveSpeed * speedFactor.value.toDouble()
@@ -88,7 +91,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT, "Increases your movement spe
                     setTimerSpeed(airSpeed.value)
 
                     // Check state or horizontal collision state
-                    if (state == State.SLOW || minecraft.player.collidedHorizontally) {
+                    if (state == State.SLOW || mc.player.collidedHorizontally) {
                         // Decrease speed
                         speed -= airFriction.value * PlayerUtil.baseMoveSpeed
 
@@ -111,11 +114,11 @@ object Strafe : Module("Strafe", Category.MOVEMENT, "Increases your movement spe
     }
 
     private fun applySpeed(): Boolean {
-        return !minecraft.player.isInLava && !minecraft.player.isInWater && !minecraft.player.isOnLadder
+        return !mc.player.isInLava && !mc.player.isInWater && !mc.player.isOnLadder
     }
 
     private fun setTimerSpeed(input: Float) {
-        ((minecraft as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50f / input)
+        ((mc as IMinecraft).hookGetTimer() as ITimer).hookSetTickLength(50f / input)
     }
 
     enum class State {
